@@ -24,8 +24,8 @@ class Aef::Hosts::File
   SECTION_MARKER_PATTERN = /^ -----(BEGIN|END) SECTION (.*)-----(?:[\r])?$/
   ENTRY_LINE_PATTERN     = /^([^#]*)(?:#(.*))?$/
 
-  attr_accessor :path, :linebreak_encoding
-  attr_reader :sections, :lines
+  attr_accessor :path
+  attr_reader :elements
 
   def initialize(path = nil)
     reset
@@ -33,30 +33,11 @@ class Aef::Hosts::File
   end
 
   def reset
-    @lines    = []
-    @sections = []
-
-    add_section
+    @elements = []
   end
 
   def path=(path)
     @path = Aef::Hosts.to_pathname(path)
-  end
-
-  def add_section(name = nil, options = {})
-    if @sections.last
-      begin_line_number = @sections.last.end_line_number
-    else
-      begin_line_number = 1
-    end
-
-    section = Aef::Hosts::Section.new(name,
-      :file              => self,
-      :begin_line_number => begin_line_number
-    )
-
-    @sections << section
-    section
   end
 
   def read(path = nil)
@@ -64,13 +45,12 @@ class Aef::Hosts::File
 
     raise ArgumentError, 'No path given' unless path
 
-    current_section = @sections.first
+    current_section = self
 
-    linebreak_encodings = Set.new
+    line_number = 1
 
     path.read.each_line do |line|
-      linebreak_encodings += Aef::Linebreak.encodings(line)
-      @lines << line.freeze
+      line_number += 1
 
       if COMMENT_LINE_PATTERN =~ line
         comment = $1
@@ -82,26 +62,25 @@ class Aef::Hosts::File
           case type
           when 'BEGIN'
             unless current_section.name
-              current_section = add_section(
+              current_section = Aef::Hosts::Section.new(
                 name,
-                :begin_line_number => @lines.length
+                :cache => {:header => line, :footer => nil}
               )
             else
-              raise Aef::Hosts::ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' in #{path.realpath} on line #{@lines.length}"
+              raise Aef::Hosts::ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' in #{path.realpath} on line #{line_number}"
             end
           when 'END'
             if name == current_section.name
-              current_section.end_line_number = @lines.length
+              current_section.cache[:footer] = line
               current_section = add_section
             else
-              raise Aef::Hosts::ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' in #{path.realpath} on line #{@lines.length}"
+              raise Aef::Hosts::ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' in #{path.realpath} on line #{line_number}"
             end
           end
         else
           current_section.elements << Aef::Hosts::Comment.new(
             comment,
-            :file        => self,
-            :line_number => @lines.length
+            :cache => line
           )
         end
       else
@@ -116,32 +95,14 @@ class Aef::Hosts::File
 
           current_section.elements << Aef::Hosts::Entry.new(
             address, name,
-            :aliases     => aliases,
-            :comment     => comment,
-            :file        => self,
-            :line_number => @lines.length
+            :aliases => aliases,
+            :comment => comment,
+            :cache   => line
           )
         else
-          current_section.elements << Aef::Hosts::EmptyEntry.new(
-            :file        => self,
-            :line_number => @lines.length
+          current_section.elements << Aef::Hosts::EmptyElement.new(
+            :cache => line
           )
-        end
-      end
-
-      current_section.end_line_number = @lines.length
-    end
-
-    @lines.freeze
-
-    unless @linebreak_encoding
-      if linebreak_encodings.length == 1
-        @linebreak_encoding = linebreak_encodings.first
-      else
-        if Config::CONFIG['host_os'] =~ /mswin|mingw/
-          @linebreak_encoding = :windows
-        else
-          @linebreak_encoding = :unix
         end
       end
     end
@@ -160,8 +121,8 @@ class Aef::Hosts::File
   def to_s(options = {})
     string = ''
 
-    sections.each do |section|
-      string += section.to_s(options)
+    @elements.each do |element|
+      string += element.to_s(options)
     end
 
     string

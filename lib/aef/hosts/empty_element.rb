@@ -19,40 +19,21 @@
 
 require 'aef/hosts'
 
-class Aef::Hosts::EmptyEntry
-  attr_accessor :file, :line_number
-
+class Aef::Hosts::EmptyElement < Aef::Hosts::Element
   def initialize(options = {})
     Aef::Hosts.validate_options(options,
       self.class.valid_option_keys_for_initialize)
 
-    @file        = options[:file]
-    @line_number = options[:line_number]
-  end
-
-  alias inspect to_s
-
-  def to_s(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_to_s)
-
-    if not @file or
-       not @line_number or
-       options[:force_generation]
-
-      "\n"
-    else
-      @file.lines[line_number - 1]
-    end
+    @cache = options[:cache]
   end
 
   protected
 
   def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:file, :line_number].freeze
+    @valid_option_keys_for_initialize ||= [:cache].freeze
   end
-
-  def self.valid_option_keys_for_to_s
-    @valid_option_keys_for_to_s ||= [:force_generation].freeze
+  
+  def generate_string(options = {})
+    "\n"
   end
 end

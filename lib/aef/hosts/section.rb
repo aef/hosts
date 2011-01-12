@@ -19,60 +19,63 @@
 
 require 'aef/hosts'
 
-class Aef::Hosts::Section
-  attr_accessor :name, :file, :begin_line_number, :end_line_number
+class Aef::Hosts::Section < Aef::Hosts::Element
+  define_attribute_methods [:name]
+  
+  attr_accessor :name
   attr_reader :elements
 
   def initialize(name, options = {})
     Aef::Hosts.validate_options(options,
       self.class.valid_option_keys_for_initialize)
 
-    @name              = name
-    @file              = options[:file]
-    @begin_line_number = options[:begin_line_number]
-    @end_line_number   = options[:end_line_number]
-    @elements          = options[:elements] || []
+    raise ArgumentError, 'Name cannot be empty' unless name
+
+    @name     = name
+    @elements = options[:elements] || []
+    @cache    = options[:cache] || {:header => nil, :footer => nil}
   end
 
-  alias inspect to_s
-
-  def to_s(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_to_s)
-
-    header = ''
-    footer = ''
-
-    if name
-      if not @file or
-         not @begin_line_number or
-         not @end_line_number or
-         options[:force_generation]
-
-        header = "# -----BEGIN SECTION #{name}-----\n"
-        footer = "# -----END SECTION #{name}-----\n"
-      else
-        header = @file.lines[@begin_line_number]
-        footer = @file.lines[@end_line_number - 1]
-      end
-    end
-
-    string = header
-
-    elements.each do |element|
-      string += element.to_s(options)
-    end
-
-    string += footer
+  def cache_filled?
+    @cache[:header] and @cache[:footer]
+  end
+  
+  def name=(name)
+    name_will_change! unless name.equal?(@name)
+    @name = name
   end
 
   protected
 
   def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:file, :begin_line_number, :end_line_number, :elements].freeze
+    @valid_option_keys_for_initialize ||= [:cache, :elements].freeze
+  end
+  
+  def generate_string(options = {})
+    string = ''
+    
+    string += "# -----BEGIN SECTION #{name}-----\n"
+
+    @elements.each do |element|
+      string += element.to_s(options)
+    end
+ 
+    string += "# -----END SECTION #{name}-----\n"
+
+    string
   end
 
-  def self.valid_option_keys_for_to_s
-    @valid_option_keys_for_to_s ||= [:force_generation].freeze
+  def cache_string(options = {})
+    string = ''
+
+    string += @cache[:header]
+
+    @elements.each do |element|
+      string += element.to_s(options)
+    end
+
+    string += @cache[:footer]
+
+    string
   end
 end

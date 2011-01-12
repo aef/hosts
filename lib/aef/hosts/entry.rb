@@ -20,11 +20,9 @@
 require 'aef/hosts'
 
 class Aef::Hosts::Entry < Aef::Hosts::Element
-  include ActiveModel::Dirty
-
   define_attribute_methods [:address, :name, :comment, :aliases]
 
-  attr_accessor :address, :name, :comment, :file, :line_number
+  attr_accessor :address, :name, :comment
   attr_reader :aliases
 
   def initialize(address, name, options = {})
@@ -34,12 +32,11 @@ class Aef::Hosts::Entry < Aef::Hosts::Element
     raise ArgumentError, 'Address cannot be empty' unless address
     raise ArgumentError, 'Name cannot be empty' unless name
 
-    @address     = address
-    @name        = name
-    @aliases     = options[:aliases]
-    @comment     = options[:comment]
-    @file        = options[:file]
-    @line_number = options[:line_number]
+    @address = address
+    @name    = name
+    @aliases = options[:aliases] || []
+    @comment = options[:comment]
+    @cache   = options[:cache]
   end
 
   def address=(address)
@@ -62,30 +59,13 @@ class Aef::Hosts::Entry < Aef::Hosts::Element
     @aliases = aliases
   end
 
-  alias inspect to_s
-
-  def to_s(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_to_s)
-
-    if not @file or
-       not @line_number or
-       options[:force_generation] or
-       changed?
-
-      [address, name, *aliases].join(' ') + "\n"
-    else
-      @file.lines[line_number - 1]
-    end
-  end
-
   protected
 
   def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:aliases, :comment, :file, :line_number].freeze
+    @valid_option_keys_for_initialize ||= [:aliases, :comment, :cache].freeze
   end
-
-  def self.valid_option_keys_for_to_s
-    @valid_option_keys_for_to_s ||= [:force_generation].freeze
+  
+  def generate_string(options = nil)
+    [address, name, *aliases].join(' ') + " ##{comment}\n"
   end
 end

@@ -18,9 +18,49 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Aef::Hosts::Element
+  include ActiveModel::Dirty
+
   attr_reader :cache
 
-  def invalidate_cache!
+  def invalidate_cache
     @cache = nil
+  end
+
+  def cache_filled?
+    @cache ? true : false
+  end
+
+  alias inspect to_s
+
+  def to_s(options = {})
+    Aef::Hosts.validate_options(options,
+      self.class.valid_option_keys_for_to_s)
+
+    string = ''
+
+    if not cache_filled? or
+       options[:force_generation] or
+       changed?
+
+      string += generate_string(options)
+    else
+      string += cache_string(options)
+    end
+
+    string
+  end
+
+  protected
+
+  def self.valid_option_keys_for_to_s
+    @valid_option_keys_for_to_s ||= [:force_generation].freeze
+  end
+  
+  def generate_string(options = {})
+    raise NotImplementedError
+  end
+
+  def cache_string(options = {})
+    @cache
   end
 end

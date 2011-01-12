@@ -20,7 +20,6 @@
 require 'set'
 require 'pathname'
 require 'active_model'
-require 'aef/linebreak'
 
 # Namespace for projects of Alexander E. Fischer <aef@raxys.net>
 #
@@ -34,12 +33,12 @@ module Aef
   module Hosts
     VERSION = '0.1.0'.freeze
 
-    autoload :File,       'aef/hosts/file'
-    autoload :Element,    'aef/hosts/element'
-    autoload :Section,    'aef/hosts/section'
-    autoload :Entry,      'aef/hosts/entry'
-    autoload :EmptyEntry, 'aef/hosts/empty_entry'
-    autoload :Comment,    'aef/hosts/comment'
+    autoload :File,         'aef/hosts/file'
+    autoload :Element,      'aef/hosts/element'
+    autoload :Section,      'aef/hosts/section'
+    autoload :Entry,        'aef/hosts/entry'
+    autoload :Comment,      'aef/hosts/comment'
+    autoload :EmptyElement, 'aef/hosts/empty_element'
 
     module_function
     def validate_options(options, valid_keys)

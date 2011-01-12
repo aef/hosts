@@ -1,3 +1,22 @@
+# encoding: UTF-8
+#
+# Copyright Alexander E. Fischer <aef@raxys.net>, 2010
+#
+# This file is part of Hosts.
+#
+# Hosts is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 require 'spec_helper'
 
 describe Aef::Hosts::File do
@@ -14,7 +33,7 @@ describe Aef::Hosts::File do
       @file.path.should be_nil
     end
   
-    it "should be allowed to be set" do
+    it "should be settable" do
       @file.should respond_to(:path=)
   
       @file.path = Pathname.pwd
@@ -35,24 +54,6 @@ describe Aef::Hosts::File do
     end
   end
   
-  describe "linebreak_encoding attribute" do
-    it "should exist" do
-      @file.should respond_to(:linebreak_encoding)
-    end
-    
-    it "should be nil by default" do
-      @file.linebreak_encoding.should be_nil
-    end
-    
-    it "should be allowed to be set" do
-      @file.should respond_to(:linebreak_encoding=)
-    
-      @file.linebreak_encoding = :unix
-      
-      @file.linebreak_encoding.should == :unix
-    end
-  end
-
   describe "reading" do
     before(:each) do
       @hosts_file = fixtures_dir + 'linux_hosts'
@@ -62,11 +63,10 @@ describe Aef::Hosts::File do
     it "should be possible through the #read method" do
       @file.should respond_to(:read)
 
-      lambda {      
-        return_value = @file.read
-      }.should change{ @file.entries.length }
+      lambda {
+        @file.read.should == true
+      }.should change{ @file.elements.length }
       
-      return_value.should == true
     end
     
     it "should allow the path attribute to be temporarily overridden" do
@@ -75,42 +75,8 @@ describe Aef::Hosts::File do
       return_value = @file.read(@hosts_file)
       return_value.should == true
     end
-    
-    it "should correctly detect and set unix linebreak encoding if none is set" do
-      @file.read
-      
-      @file.linebreak_encoding.should == :unix
-    end
-    
-    it "should correctly detect and set windows linebreak encoding if none is set" do
-      @file.path = fixtures_dir + 'windows_7_hosts'
-      
-      @file.read
-      
-      @file.linebreak_encoding.should == :windows
-    end
-
-    it "should correctly detect and fallback to the system linebreak encoding on windows and unix if the read file is mixed" do
-      @file.path = fixtures_dir + 'hybrid_hosts'
-
-      @file.read
-
-      if Config::CONFIG['host_os'] =~ /mswin|mingw/
-        @file.linebreak_encoding.should == :windows
-      else
-        @file.linebreak_encoding.should == :unix
-      end
-    end
-    
-    it "should not modify the linebreak encoding if already set" do
-      @file.linebreak_encoding = :windows
-      
-      @file.read
-      
-      @file.linebreak_encoding.should == :windows
-    end
   end
-  
+    
   describe "generating" do
     before(:each) do
       @hosts_file = fixtures_dir + 'hybrid_hosts'
@@ -120,14 +86,6 @@ describe Aef::Hosts::File do
 
     it "should produce unchanged output if nothing changed" do
       @file.to_s.should == @hosts_file.read
-    end
-    
-    it "should re-encode output if set to enforce linebreak encoding" do
-      @file.linebreak_encoding = :unix
-          
-      generated_document = @file.to_s(:force_linebreak_encoding => true)
-      
-      generated_document.should == Aef::Linebreak.encode(@hosts_file.read, :unix)
     end
   end
 
@@ -145,7 +103,5 @@ describe Aef::Hosts::File do
     end
     
     it "should allow the path attribute to be temporarily overridden"
-    
-    it "should allow the linebreak_encoding attribute to be temporarily overridden"
   end
 end
