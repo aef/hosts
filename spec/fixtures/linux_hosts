@@ -1,0 +1,21 @@
+# A comment
+127.0.0.1	myhost	localhost.localdomain	localhost
+127.0.1.1	myhost.mydomain.tld myhost
+# Another comment
+# Two lines long
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+127.0.0.1       example.net
+
+2620:0:2d0:200::10 example.com
+192.0.32.10        example.com
+
+# Last comment
+

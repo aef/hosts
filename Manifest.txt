@@ -1,0 +1,13 @@
+lib/aef/hosts.rb
+lib/aef/hosts/section.rb
+lib/aef/hosts/comment.rb
+lib/aef/hosts/empty_entry.rb
+lib/aef/hosts/file.rb
+lib/aef/hosts/entry.rb
+Manifest.txt
+History.txt
+Rakefile
+.autotest
+spec/hosts_spec.rb
+LICENSE
+README.rdoc
