@@ -17,31 +17,8 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 =end
 
-require 'aef/hosts'
-
-# Represents an empty line as element of a hosts file
-class Aef::Hosts::EmptyElement < Aef::Hosts::Element
-  # Defines valid keys for the option hash of the constructor
-  def self.valid_option_keys_for_initialize
-    [:cache].freeze
-  end
-
-  # Constructor. Initializes the object.
-  #
-  # Possible options:
-  #
-  # Through :cache, a cached String representation can be set.
-  def initialize(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_initialize)
-
-    @cache = options[:cache]
-  end
-
-  protected
-
-  # Defines the algorithm to generate a String representation from scratch.
-  def generate_string(options = {})
-    "\n"
+module Aef
+  module Hosts
+    VERSION = '0.1.0'.freeze
   end
 end
