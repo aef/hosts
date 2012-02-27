@@ -25,6 +25,15 @@ class Aef::Hosts::Entry < Aef::Hosts::Element
   attr_accessor :address, :name, :comment
   attr_reader :aliases
 
+  # Constructor. Initializes the object.
+  #
+  # Address and name must be set
+  #
+  # Possible options:
+  #
+  # Through :aliases, an Array of aliases can be set.
+  # Through :comment, a String comment can be set.
+  # Through :cache, a cached String representation can be set.
   def initialize(address, name, options = {})
     Aef::Hosts.validate_options(options,
       self.class.valid_option_keys_for_initialize)
@@ -66,6 +75,12 @@ class Aef::Hosts::Entry < Aef::Hosts::Element
   end
   
   def generate_string(options = nil)
-    [address, name, *aliases].join(' ') + " ##{comment}\n"
+    if comment
+      suffix = " ##{comment}\n"
+    else
+      suffix = "\n"
+    end
+  
+    [address, name, *aliases].join(' ') + suffix
   end
 end

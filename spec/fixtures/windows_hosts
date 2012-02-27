@@ -1,12 +1,14 @@
 # A comment
       102.54.94.97     rhino.acme.com          # source server
        38.25.63.10     x.acme.com              # x client host
-# Another comment
-# Two lines long
-127.0.0.1       example.net
-
+    # Another comment
+    # Two lines long
+	127.0.0.1       localhost  otherhost   evenotherhost
+	::1             localhost
+    
+127.0.0.1				example.net
+	
 2620:0:2d0:200::10 example.com
 192.0.32.10        example.com
 
-# Last comment
-
+	# Last comment

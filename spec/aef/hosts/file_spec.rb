@@ -21,6 +21,7 @@ require 'spec_helper'
 
 describe Aef::Hosts::File do
   before(:each) do
+    @hosts_file = fixtures_dir + 'linux_hosts'
     @file = described_class.new
   end
 
@@ -54,9 +55,8 @@ describe Aef::Hosts::File do
     end
   end
   
-  describe "reading" do
+  describe "reading from file" do
     before(:each) do
-      @hosts_file = fixtures_dir + 'linux_hosts'
       @file.path = @hosts_file
     end
   
@@ -66,7 +66,6 @@ describe Aef::Hosts::File do
       lambda {
         @file.read.should == true
       }.should change{ @file.elements.length }
-      
     end
     
     it "should allow the path attribute to be temporarily overridden" do
@@ -76,20 +75,43 @@ describe Aef::Hosts::File do
       return_value.should == true
     end
   end
-    
-  describe "generating" do
+  
+  describe "parsing" do
     before(:each) do
-      @hosts_file = fixtures_dir + 'hybrid_hosts'
+      @file.path = @hosts_file
+    end
+  
+    it "should be possible through the #parse method" do
+      @file.should respond_to(:parse)
+
+      lambda {
+        @file.parse(@hosts_file.read).should == true
+      }.should change{ @file.elements.length }      
+    end
+    
+  end
+    
+  describe "string generation" do
+    it "should produce unchanged output if nothing changed" do
       @file.path = @hosts_file
       @file.read
-    end
-
-    it "should produce unchanged output if nothing changed" do
+      
       @file.to_s.should == @hosts_file.read
+    end
+    
+    it "should be able to re-encode the linebreaks of generated output" do
+      @hosts_file = fixtures_dir + 'windows_hosts'
+      @file.path = @hosts_file
+      @file.read
+      
+      original_document = @hosts_file.read
+      
+      @file.to_s.should_not == original_document
+      @file.to_s(:linebreak_encoding => :windows).should == original_document
     end
   end
 
-  describe "writing" do
+  describe "writing to file" do
     before(:each) do
       @dir = create_temp_dir
     end
@@ -100,8 +122,28 @@ describe Aef::Hosts::File do
 
     it "should be possible through the #write method" do
       @file.should respond_to(:write)
+
+      result_file = @dir + 'hosts'
+      data = @hosts_file.read
+
+      @file.parse(data)
+      @file.path = result_file
+      @file.write
+      
+      result_file.read.should == data
     end
     
-    it "should allow the path attribute to be temporarily overridden"
+    it "should allow the path attribute to be temporarily overridden" do
+      result_file = @dir + 'hosts'
+      wrong_file  = @dir + 'wrong_file'
+      data = @hosts_file.read
+
+      @file.parse(data)
+      @file.path = wrong_file
+
+      @file.write(:path => result_file)
+
+      result_file.read.should == data
+    end
   end
 end

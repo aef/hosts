@@ -19,37 +19,56 @@
 
 require 'aef/hosts'
 
+# This class represents a hosts file and aggregates its elements.
+#
+# It is able to parse host files from file-system or String and can generate a
+# String representation of itself to String or file-system
 class Aef::Hosts::File
-  COMMENT_LINE_PATTERN   = /^#(.*)$/
+  COMMENT_LINE_PATTERN   = /^\s*#(.*)$/
   SECTION_MARKER_PATTERN = /^ -----(BEGIN|END) SECTION (.*)-----(?:[\r])?$/
   ENTRY_LINE_PATTERN     = /^([^#]*)(?:#(.*))?$/
 
   attr_accessor :path
   attr_reader :elements
 
+  # Constructor. Initializes the object.
+  #
+  # The path attribute may optionally be specified
   def initialize(path = nil)
     reset
     self.path = path
   end
 
+  # Removes all elements
   def reset
     @elements = []
   end
 
+  # Sets the path attribute
   def path=(path)
     @path = Aef::Hosts.to_pathname(path)
   end
 
+  # Parses a hosts file given as path
+  #
+  # A path must be either set as attribute or as overriding argument
   def read(path = nil)
     path = path.nil? ? @path : Aef::Hosts.to_pathname(path)
 
     raise ArgumentError, 'No path given' unless path
-
+    
+    parse(path.read)
+  end
+  
+  # Parses a hosts file given as String
+  def parse(data)
     current_section = self
 
     line_number = 1
 
-    path.read.each_line do |line|
+    data.each_line do |line|
+      line = Aef::Linebreak.encode(line, :unix)
+    
       line_number += 1
 
       if COMMENT_LINE_PATTERN =~ line
@@ -91,7 +110,10 @@ class Aef::Hosts::File
 
         if entry and not entry =~ /^\s+$/
 
-          address, name, *aliases = entry.split(/\s+/)
+          split = entry.split(/\s+/)
+          split.shift if split.first == ''
+
+          address, name, *aliases = *split
 
           current_section.elements << Aef::Hosts::Entry.new(
             address, name,
@@ -106,19 +128,37 @@ class Aef::Hosts::File
         end
       end
     end
-
+    
     true
   end
 
-  def write(path = nil)
-    path = path.nil? ? @path : to_pathname(path)
+  # Generates a hosts file and writes it to a path
+  def write(options = {})
+    Aef::Hosts.validate_options(options,
+      self.class.valid_option_keys_for_write)
+  
+    path = options[:path].nil? ? @path : Aef::Hosts.to_pathname(options[:path])
 
     raise ArgumentError, 'No path given' unless path
-  end
+    
+    options.delete(:path)
 
+    path.open('w') do |file|
+      file.write(to_s(options))
+    end
+    
+    true
+  end
+  
   alias inspect to_s
 
+  # Generates a hosts file as String
+  #
+  # Valid options are defined in Aef::Hosts::Element.valid_option_keys_for_to_s
   def to_s(options = {})
+    Aef::Hosts.validate_options(options,
+      self.class.valid_option_keys_for_to_s)
+  
     string = ''
 
     @elements.each do |element|
@@ -126,5 +166,15 @@ class Aef::Hosts::File
     end
 
     string
+  end
+  
+  # Defines valid keys for the option hash of the write method
+  def self.valid_option_keys_for_write
+    (valid_option_keys_for_to_s + [:path]).freeze
+  end
+
+  # Defines valid keys for the option hash of the to_s method  
+  def self.valid_option_keys_for_to_s
+    Aef::Hosts::Element.valid_option_keys_for_to_s
   end
 end

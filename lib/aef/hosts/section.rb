@@ -19,12 +19,28 @@
 
 require 'aef/hosts'
 
+# This represents a section as element of a hosts file. It consists of a header,
+# futher included elements and a footer
 class Aef::Hosts::Section < Aef::Hosts::Element
+  # Defines valid keys for the option hash of the constructor
+  def self.valid_option_keys_for_initialize
+    [:cache, :elements].freeze
+  end
+
   define_attribute_methods [:name]
   
   attr_accessor :name
   attr_reader :elements
-
+  
+  # Constructor. Initializes the object.
+  #
+  # A name for the section must be specified
+  #
+  # Possible options:
+  #
+  # Through :cache, a cached String representation can be set.
+  #
+  # Through :elements, an Array of elements can be set.
   def initialize(name, options = {})
     Aef::Hosts.validate_options(options,
       self.class.valid_option_keys_for_initialize)
@@ -36,21 +52,22 @@ class Aef::Hosts::Section < Aef::Hosts::Element
     @cache    = options[:cache] || {:header => nil, :footer => nil}
   end
 
+  # Tells if a String representation is cached or not
   def cache_filled?
     @cache[:header] and @cache[:footer]
   end
   
+  # Sets the name attribute
+  #
+  # This implicitly invalidates the cache
   def name=(name)
     name_will_change! unless name.equal?(@name)
     @name = name
   end
-
+  
   protected
 
-  def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:cache, :elements].freeze
-  end
-  
+  # Defines the algorithm to generate a String representation from scratch.
   def generate_string(options = {})
     string = ''
     
@@ -65,6 +82,7 @@ class Aef::Hosts::Section < Aef::Hosts::Element
     string
   end
 
+  # Defines the custom algorithm to construct a String representation from cache.
   def cache_string(options = {})
     string = ''
 
