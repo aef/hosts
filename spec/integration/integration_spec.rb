@@ -345,7 +345,7 @@ describe 'Hosts library' do
     )
     
     lines = @file.to_s.lines.to_a
-    lines[19].should == "192.168.23.5 the-new-host the-new-host.domain.tld service.domain.tld\n"
+    lines[21].should == "192.168.23.5 the-new-host the-new-host.domain.tld service.domain.tld\n"
   end
   
   it "should be able to insert a new entry" do
