@@ -17,77 +17,97 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 =end
 
-# The base class for elements which are aggregated by the Aef::Hosts::File class
-#
-# This is meant to be abstract. It is not supposed to be instantiated.
-class Aef::Hosts::Element
-  # Used to automatically invalidate the cache if marked attributes are changed
-  include ActiveModel::Dirty
-  
-  # Cached String representation is stored here
-  attr_reader :cache
+require 'aef/hosts'
 
-  # Deletes the cached String representation
-  def invalidate_cache
-    @cache = nil
-  end
+module Aef
+  module Hosts
 
-  # Tells if a String representation is cached or not
-  def cache_filled?
-    @cache ? true : false
-  end
+    # The base class for elements which are aggregated by the Aef::Hosts::File
+    # class.
+    #
+    # @abstract This class is not supposed to be instantiated.
+    class Element
 
-  alias inspect to_s
-  
-  # Provides a String representation of the element
-  #
-  # Possible options:
-  #
-  # If :force_generation is set to true, the cache won't be used, even if it
-  # exists and the representation is generated from scratch.
-  #
-  # If :linebreak_encoding is set to :unix, :windows or :mac, the representation
-  # will be re-encoded. If nothing is given, the representation can be expected
-  # to be encoded for UNIX-like system.
-  # See documentation of the gem "linebreak" for more information.
-  def to_s(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_to_s)
+      # Used to automatically invalidate the cache if marked attributes are changed
+      include ActiveModel::Dirty
 
-    string = ''
+      # @return [String] cached String representation
+      attr_reader :cache
 
-    if not cache_filled? or
-       options[:force_generation] or
-       changed?
+      # Deletes the cached String representation
+      #
+      # @return [Aef::Hosts::Element] a self reference
+      def invalidate_cache
+        @cache = nil
 
-      string += generate_string(options)
-    else
-      string += cache_string(options)
+        self
+      end
+
+      # Tells if a String representation is cached or not
+      #
+      # @return [true, false] true if cache is not empty
+      def cache_filled?
+        @cache ? true : false
+      end
+
+      alias inspect to_s
+
+      # Provides a String representation of the element
+      #
+      # @param [Hash] options
+      # @option options [true, false] :force_generation if set to true, the
+      #   cache won't be used, even if it not empty
+      # @option options [:unix, :windows, :mac] :linebreak_encoding the
+      #   linebreak encoding of the result. If nothing is specified the result
+      #   will be encoded as if :unix was specified.
+      # @see Aef::Linebreak#encode
+      def to_s(options = {})
+        Aef::Hosts.validate_options(options,
+          self.class.valid_option_keys_for_to_s)
+
+        string = ''
+
+        if not cache_filled? or
+           options[:force_generation] or
+           changed?
+
+          string += generate_string(options)
+        else
+          string += cache_string(options)
+        end
+
+        if options[:linebreak_encoding]
+          string = Aef::Linebreak.encode(string, options[:linebreak_encoding])
+        end
+
+        string
+      end
+
+      # Defines valid keys for the option hash of the to_s method
+      def self.valid_option_keys_for_to_s
+        [:force_generation, :linebreak_encoding].freeze
+      end
+
+      protected
+
+      # Defines the algorithm to generate a String representation from scratch.
+      #
+      # @abstract This method needs to be implemented in descendant classes.
+      # @return [String] a generated String representation
+      def generate_string(options = {})
+        raise NotImplementedError
+      end
+
+      # Defines the algorithm to construct the String representation from cache
+      #
+      # FIXME: Return copy of the cache instead of reference
+      #
+      # @return [String] the cached String representation
+      def cache_string(options = {})
+        @cache
+      end
     end
-    
-    if options[:linebreak_encoding]
-      string = Aef::Linebreak.encode(string, options[:linebreak_encoding])
-    end
 
-    string
-  end
-
-  # Defines valid keys for the option hash of the to_s method
-  def self.valid_option_keys_for_to_s
-    [:force_generation, :linebreak_encoding].freeze
-  end
-
-  protected
-  
-  # Defines the algorithm to generate a String representation from scratch.
-  #
-  # This method is abstract. It needs to be implemented in child classes.
-  def generate_string(options = {})
-    raise NotImplementedError
-  end
-
-  # Defines the algorithm to construct the String representation from cache
-  def cache_string(options = {})
-    @cache
   end
 end
+

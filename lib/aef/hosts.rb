@@ -22,15 +22,18 @@ require 'pathname'
 require 'active_model'
 require 'aef/linebreak'
 
-# Namespace for projects of Alexander E. Fischer <aef@raxys.net>
+# Namespace for projects of Alexander E. Fischer <aef@raxys.net>.
 #
 # If you want to be able to simply type Example instead of Aef::Example to
 # address classes in this namespace simply write the following before using the
-# classes:
+# classes.
 #
-#  include Aef
+# @example Including the namespace
+#   include Aef
+# @author Alexander E. Fischer
 module Aef
 
+  # Namespace for the hosts library
   module Hosts
     module_function
     def validate_options(options, valid_keys)
@@ -41,10 +44,11 @@ module Aef
 
     def to_pathname(path)
       unless path.nil?
-        Pathname(path)
+        Pathname.new(path)
       end
     end
 
+    # An exception for errors happening while parsing a hosts file
     class ParserError < RuntimeError; end
   end
 end

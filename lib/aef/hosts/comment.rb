@@ -19,33 +19,50 @@ PERFORMANCE OF THIS SOFTWARE.
 
 require 'aef/hosts'
 
-class Aef::Hosts::Comment < Aef::Hosts::Element
-  define_attribute_methods [:comment]
+module Aef
+  module Hosts
 
-  attr_accessor :comment
+    # Represents a comment-only line as element of a hosts file
+    class Comment < Element
+      define_attribute_methods [:comment]
 
-  def initialize(comment, options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_initialize)
+      attr_accessor :comment
 
-    raise ArgumentError, 'Name cannot be empty' unless comment
+      # Initializes a comment
+      #
+      # @param comment [String] the comment
+      # @param options [Hash]
+      # @option options [String] :cache sets a cached String representation
+      def initialize(comment, options = {})
+        Aef::Hosts.validate_options(options,
+          self.class.valid_option_keys_for_initialize)
 
-    @comment = comment
-    @cache   = options[:cache]
-  end
+        raise ArgumentError, 'Comment cannot be empty' unless comment
 
-  def comment=(comment)
-    comment_will_change! unless comment.equal?(@comment)
-    @comment = comment
-  end
+        @comment = comment
+        @cache   = options[:cache]
+      end
 
-  protected
-  
-  def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:comment, :cache].freeze
-  end
+      # @attribute [String] comment the comment ifself
+      def comment=(comment)
+        comment_will_change! unless comment.equal?(@comment)
+        @comment = comment
+      end
 
-  def generate_string(options = {})
-    "##{comment}\n"
+      protected
+
+      def self.valid_option_keys_for_initialize
+        @valid_option_keys_for_initialize ||= [:comment, :cache].freeze
+      end
+
+      # Defines the algorithm to generate a String representation from scratch.
+      #
+      # @return [String] a generated String representation
+      def generate_string(options = {})
+        "##{comment}\n"
+      end
+    end
+
   end
 end
+

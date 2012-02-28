@@ -19,81 +19,90 @@ PERFORMANCE OF THIS SOFTWARE.
 
 require 'aef/hosts'
 
-# This represents a section as element of a hosts file. It consists of a header,
-# futher included elements and a footer
-class Aef::Hosts::Section < Aef::Hosts::Element
-  # Defines valid keys for the option hash of the constructor
-  def self.valid_option_keys_for_initialize
-    [:cache, :elements].freeze
-  end
+module Aef
+  module Hosts
 
-  define_attribute_methods [:name]
-  
-  attr_accessor :name
-  attr_reader :elements
-  
-  # Constructor. Initializes the object.
-  #
-  # A name for the section must be specified
-  #
-  # Possible options:
-  #
-  # Through :cache, a cached String representation can be set.
-  #
-  # Through :elements, an Array of elements can be set.
-  def initialize(name, options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_initialize)
+    # This represents a section as element of a hosts file. It consists of a
+    # header, futher included elements and a footer
+    class Section < Element
+      # Defines valid keys for the option hash of the constructor
+      def self.valid_option_keys_for_initialize
+        [:cache, :elements].freeze
+      end
 
-    raise ArgumentError, 'Name cannot be empty' unless name
+      define_attribute_methods [:name]
 
-    @name     = name
-    @elements = options[:elements] || []
-    @cache    = options[:cache] || {:header => nil, :footer => nil}
-  end
+      attr_accessor :name
+      attr_reader :elements
 
-  # Tells if a String representation is cached or not
-  def cache_filled?
-    @cache[:header] and @cache[:footer]
-  end
-  
-  # Sets the name attribute
-  #
-  # This implicitly invalidates the cache
-  def name=(name)
-    name_will_change! unless name.equal?(@name)
-    @name = name
-  end
-  
-  protected
+      # Initializes a section
+      #
+      # @param [String] name title of the section
+      # @param [Hash] options
+      # @option options [String] :cache sets a cached String representation
+      # @option options [Array<Aef::Hosts::Element>] :elements a list of
+      #   elements in the section
+      def initialize(name, options = {})
+        Aef::Hosts.validate_options(options,
+          self.class.valid_option_keys_for_initialize)
 
-  # Defines the algorithm to generate a String representation from scratch.
-  def generate_string(options = {})
-    string = ''
-    
-    string += "# -----BEGIN SECTION #{name}-----\n"
+        raise ArgumentError, 'Name cannot be empty' unless name
 
-    @elements.each do |element|
-      string += element.to_s(options)
+        @name     = name
+        @elements = options[:elements] || []
+        @cache    = options[:cache] || {:header => nil, :footer => nil}
+      end
+
+      # Tells if a String representation is cached or not
+      #
+      # @return [true, false] true if cache is not empty
+      def cache_filled?
+        @cache[:header] and @cache[:footer]
+      end
+
+      # @note This implicitly invalidates the cache
+      # @attribute [String] name title of the section
+      def name=(name)
+        name_will_change! unless name.equal?(@name)
+        @name = name
+      end
+
+      protected
+
+      # Defines the algorithm to generate a String representation from scratch.
+      #
+      # @return [String] a generated String representation
+      def generate_string(options = {})
+        string = ''
+
+        string += "# -----BEGIN SECTION #{name}-----\n"
+
+        @elements.each do |element|
+          string += element.to_s(options)
+        end
+
+        string += "# -----END SECTION #{name}-----\n"
+
+        string
+      end
+
+      # Defines the algorithm to construct the String representation from cache
+      #
+      # @return [String] the cached String representation
+      def cache_string(options = {})
+        string = ''
+
+        string += @cache[:header]
+
+        @elements.each do |element|
+          string += element.to_s(options)
+        end
+
+        string += @cache[:footer]
+
+        string
+      end
+
     end
- 
-    string += "# -----END SECTION #{name}-----\n"
-
-    string
-  end
-
-  # Defines the custom algorithm to construct a String representation from cache.
-  def cache_string(options = {})
-    string = ''
-
-    string += @cache[:header]
-
-    @elements.each do |element|
-      string += element.to_s(options)
-    end
-
-    string += @cache[:footer]
-
-    string
   end
 end

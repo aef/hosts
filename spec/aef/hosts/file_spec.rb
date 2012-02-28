@@ -64,7 +64,7 @@ describe Aef::Hosts::File do
       @file.should respond_to(:read)
 
       lambda {
-        @file.read.should == true
+        @file.read.should == @file
       }.should change{ @file.elements.length }
     end
     
@@ -72,7 +72,7 @@ describe Aef::Hosts::File do
       @file.path = nil
       
       return_value = @file.read(@hosts_file)
-      return_value.should == true
+      return_value.should == @file
     end
   end
   
@@ -85,7 +85,7 @@ describe Aef::Hosts::File do
       @file.should respond_to(:parse)
 
       lambda {
-        @file.parse(@hosts_file.read).should == true
+        @file.parse(@hosts_file.read).should == @file
       }.should change{ @file.elements.length }      
     end
     

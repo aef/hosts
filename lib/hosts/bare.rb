@@ -17,9 +17,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 =end
 
-# Helper file to allow loading by gem name. Includes namespace Aef::Hosts
-# into Object.
+# Require this file if you don't want the Aef::Hosts namespace to be
+# included into Object.
 
 require 'aef/hosts'
-
-Object.public_send(:include, Aef::Hosts)

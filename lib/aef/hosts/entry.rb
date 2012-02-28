@@ -19,68 +19,81 @@ PERFORMANCE OF THIS SOFTWARE.
 
 require 'aef/hosts'
 
-class Aef::Hosts::Entry < Aef::Hosts::Element
-  define_attribute_methods [:address, :name, :comment, :aliases]
+module Aef
+  module Hosts
+    class Entry < Element
+      define_attribute_methods [:address, :name, :comment, :aliases]
 
-  attr_accessor :address, :name, :comment
-  attr_reader :aliases
+      attr_accessor :address, :name, :comment
+      attr_reader :aliases
 
-  # Constructor. Initializes the object.
-  #
-  # Address and name must be set
-  #
-  # Possible options:
-  #
-  # Through :aliases, an Array of aliases can be set.
-  # Through :comment, a String comment can be set.
-  # Through :cache, a cached String representation can be set.
-  def initialize(address, name, options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_initialize)
+      # Initializes an entry.
+      #
+      # @param [String] address the network address
+      # @param [String] name the primary hostname for the address
+      # @param [Hash] options
+      # @option options [Array<String>] :aliases a list of aliases for the
+      #   address
+      # @option options [String] :comment a comment for the entry
+      # @option options [String] :cache a cached String representation
+      def initialize(address, name, options = {})
+        Aef::Hosts.validate_options(options,
+          self.class.valid_option_keys_for_initialize)
 
-    raise ArgumentError, 'Address cannot be empty' unless address
-    raise ArgumentError, 'Name cannot be empty' unless name
+        raise ArgumentError, 'Address cannot be empty' unless address
+        raise ArgumentError, 'Name cannot be empty' unless name
 
-    @address = address
-    @name    = name
-    @aliases = options[:aliases] || []
-    @comment = options[:comment]
-    @cache   = options[:cache]
-  end
+        @address = address
+        @name    = name
+        @aliases = options[:aliases] || []
+        @comment = options[:comment]
+        @cache   = options[:cache]
+      end
 
-  def address=(address)
-    address_will_change! unless address.equal?(@address)
-    @address = address
-  end
+      # @attribute [String] address the network address
+      def address=(address)
+        address_will_change! unless address.equal?(@address)
+        @address = address
+      end
 
-  def name=(name)
-    name_will_change! unless name.equal?(@name)
-    @name = name
-  end
+      # @attribute [String] name the primary hostname for the address
+      def name=(name)
+        name_will_change! unless name.equal?(@name)
+        @name = name
+      end
 
-  def comment=(comment)
-    comment_will_change! unless comment.equal?(@comment)
-    @comment = comment
-  end
+      # @attribute [String] comment comment for the entry
+      def comment=(comment)
+        comment_will_change! unless comment.equal?(@comment)
+        @comment = comment
+      end
 
-  def aliases=(aliases)
-    aliases_will_change! unless aliases.equal?(@aliases)
-    @aliases = aliases
-  end
+      # @attribute [Array<String>] aliases a list of aliases for the address
+      def aliases=(aliases)
+        aliases_will_change! unless aliases.equal?(@aliases)
+        @aliases = aliases
+      end
 
-  protected
+      protected
 
-  def self.valid_option_keys_for_initialize
-    @valid_option_keys_for_initialize ||= [:aliases, :comment, :cache].freeze
-  end
-  
-  def generate_string(options = nil)
-    if comment
-      suffix = " ##{comment}\n"
-    else
-      suffix = "\n"
+      def self.valid_option_keys_for_initialize
+        @valid_option_keys_for_initialize ||= [:aliases, :comment, :cache].freeze
+      end
+
+      # Defines the algorithm to generate a String representation from scratch.
+      #
+      # @abstract This method needs to be implemented in descendant classes.
+      # @return [String] a generated String representation
+      def generate_string(options = nil)
+        if comment
+          suffix = " ##{comment}\n"
+        else
+          suffix = "\n"
+        end
+
+        [address, name, *aliases].join(' ') + suffix
+      end
+
     end
-  
-    [address, name, *aliases].join(' ') + suffix
   end
 end

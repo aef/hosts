@@ -19,29 +19,37 @@ PERFORMANCE OF THIS SOFTWARE.
 
 require 'aef/hosts'
 
-# Represents an empty line as element of a hosts file
-class Aef::Hosts::EmptyElement < Aef::Hosts::Element
-  # Defines valid keys for the option hash of the constructor
-  def self.valid_option_keys_for_initialize
-    [:cache].freeze
-  end
+module Aef
+  module Hosts
 
-  # Constructor. Initializes the object.
-  #
-  # Possible options:
-  #
-  # Through :cache, a cached String representation can be set.
-  def initialize(options = {})
-    Aef::Hosts.validate_options(options,
-      self.class.valid_option_keys_for_initialize)
+    # Represents an empty line as element of a hosts file
+    class EmptyElement < Element
+      # Defines valid keys for the option hash of the constructor
+      def self.valid_option_keys_for_initialize
+        [:cache].freeze
+      end
 
-    @cache = options[:cache]
-  end
+      # Initializes an empty Element
+      #
+      # @param [Hash] options
+      # @option options [String] :cache sets a cached String representation
+      def initialize(options = {})
+        Aef::Hosts.validate_options(options,
+          self.class.valid_option_keys_for_initialize)
 
-  protected
+        @cache = options[:cache]
+      end
 
-  # Defines the algorithm to generate a String representation from scratch.
-  def generate_string(options = {})
-    "\n"
+      protected
+
+      # Defines the algorithm to generate a String representation from scratch.
+      #
+      # @return [String] a generated String representation
+      def generate_string(options = {})
+        "\n"
+      end
+
+    end
   end
 end
+
