@@ -28,10 +28,14 @@ module Aef
     # @abstract This class is not supposed to be instantiated.
     class Element
 
+      include Helpers
+
       # Used to automatically invalidate the cache if marked attributes are changed
       include ActiveModel::Dirty
 
-      # @return [String] cached String representation
+      # Cached String representation
+      #
+      # @return [String, nil]
       attr_reader :cache
 
       # Deletes the cached String representation
@@ -62,8 +66,7 @@ module Aef
       #   will be encoded as if :unix was specified.
       # @see Aef::Linebreak#encode
       def to_s(options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_to_s)
+        validate_options(options, :force_generation, :linebreak_encoding)
 
         string = ''
 
@@ -71,9 +74,9 @@ module Aef
            options[:force_generation] or
            changed?
 
-          string += generate_string(options)
+          string << generate_string(options)
         else
-          string += cache_string(options)
+          string << cache_string(options)
         end
 
         if options[:linebreak_encoding]
@@ -81,11 +84,6 @@ module Aef
         end
 
         string
-      end
-
-      # Defines valid keys for the option hash of the to_s method
-      def self.valid_option_keys_for_to_s
-        [:force_generation, :linebreak_encoding].freeze
       end
 
       protected
@@ -100,11 +98,9 @@ module Aef
 
       # Defines the algorithm to construct the String representation from cache
       #
-      # FIXME: Return copy of the cache instead of reference
-      #
       # @return [String] the cached String representation
       def cache_string(options = {})
-        @cache
+        @cache.dup
       end
     end
 

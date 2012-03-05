@@ -35,18 +35,6 @@ module Aef
 
   # Namespace for the hosts library
   module Hosts
-    module_function
-    def validate_options(options, valid_keys)
-      options.keys.each do |key|
-        raise ArgumentError, "Invalid option key: :#{key}" unless valid_keys.include?(key)
-      end
-    end
-
-    def to_pathname(path)
-      unless path.nil?
-        Pathname.new(path)
-      end
-    end
 
     # An exception for errors happening while parsing a hosts file
     class ParserError < RuntimeError; end
@@ -54,6 +42,7 @@ module Aef
 end
 
 require 'aef/hosts/version'
+require 'aef/hosts/helpers'
 require 'aef/hosts/file'
 require 'aef/hosts/element'
 require 'aef/hosts/section'

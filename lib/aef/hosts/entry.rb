@@ -21,10 +21,30 @@ require 'aef/hosts'
 
 module Aef
   module Hosts
+
+    # Represents an entry line as element of a hosts file
     class Entry < Element
+      
       define_attribute_methods [:address, :name, :comment, :aliases]
 
-      attr_accessor :address, :name, :comment
+      # The network address
+      #
+      # @return [String]
+      attr_reader :address
+
+      # The primary hostname for the address
+      #
+      # @return [String]
+      attr_reader :name
+
+      # Optional comment
+      #
+      # @return [String]
+      attr_reader :comment
+
+      # Optional alias hostnames
+      #
+      # @return [Array<String>]
       attr_reader :aliases
 
       # Initializes an entry.
@@ -37,8 +57,7 @@ module Aef
       # @option options [String] :comment a comment for the entry
       # @option options [String] :cache a cached String representation
       def initialize(address, name, options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_initialize)
+        validate_options(options, :aliases, :comment, :cache)
 
         raise ArgumentError, 'Address cannot be empty' unless address
         raise ArgumentError, 'Name cannot be empty' unless name
@@ -50,35 +69,31 @@ module Aef
         @cache   = options[:cache]
       end
 
-      # @attribute [String] address the network address
+      # Sets the network address
       def address=(address)
         address_will_change! unless address.equal?(@address)
         @address = address
       end
 
-      # @attribute [String] name the primary hostname for the address
+      # Sets the primary hostname for the address
       def name=(name)
         name_will_change! unless name.equal?(@name)
         @name = name
       end
 
-      # @attribute [String] comment comment for the entry
+      # Sets the optional comment
       def comment=(comment)
         comment_will_change! unless comment.equal?(@comment)
         @comment = comment
       end
 
-      # @attribute [Array<String>] aliases a list of aliases for the address
+      # Sets the optional alias hostnames
       def aliases=(aliases)
         aliases_will_change! unless aliases.equal?(@aliases)
         @aliases = aliases
       end
 
       protected
-
-      def self.valid_option_keys_for_initialize
-        @valid_option_keys_for_initialize ||= [:aliases, :comment, :cache].freeze
-      end
 
       # Defines the algorithm to generate a String representation from scratch.
       #

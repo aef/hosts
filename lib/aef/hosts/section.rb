@@ -25,14 +25,17 @@ module Aef
     # This represents a section as element of a hosts file. It consists of a
     # header, futher included elements and a footer
     class Section < Element
-      # Defines valid keys for the option hash of the constructor
-      def self.valid_option_keys_for_initialize
-        [:cache, :elements].freeze
-      end
 
       define_attribute_methods [:name]
 
-      attr_accessor :name
+      # Title of the section
+      #
+      # @return [String]
+      attr_reader :name
+
+      # Elements inside the section
+      #
+      # @return [Aef::Host::Element]
       attr_reader :elements
 
       # Initializes a section
@@ -43,8 +46,7 @@ module Aef
       # @option options [Array<Aef::Hosts::Element>] :elements a list of
       #   elements in the section
       def initialize(name, options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_initialize)
+        validate_options(options, :cache, :elements)
 
         raise ArgumentError, 'Name cannot be empty' unless name
 
@@ -60,8 +62,7 @@ module Aef
         @cache[:header] and @cache[:footer]
       end
 
-      # @note This implicitly invalidates the cache
-      # @attribute [String] name title of the section
+      # Sets the title of the section
       def name=(name)
         name_will_change! unless name.equal?(@name)
         @name = name
@@ -75,13 +76,13 @@ module Aef
       def generate_string(options = {})
         string = ''
 
-        string += "# -----BEGIN SECTION #{name}-----\n"
+        string << "# -----BEGIN SECTION #{name}-----\n"
 
         @elements.each do |element|
-          string += element.to_s(options)
+          string << element.to_s(options)
         end
 
-        string += "# -----END SECTION #{name}-----\n"
+        string << "# -----END SECTION #{name}-----\n"
 
         string
       end
@@ -92,13 +93,13 @@ module Aef
       def cache_string(options = {})
         string = ''
 
-        string += @cache[:header]
+        string << @cache[:header]
 
         @elements.each do |element|
-          string += element.to_s(options)
+          string << element.to_s(options)
         end
 
-        string += @cache[:footer]
+        string << @cache[:footer]
 
         string
       end

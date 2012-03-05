@@ -22,29 +22,34 @@ require 'aef/hosts'
 module Aef
   module Hosts
 
-    # Represents an empty line as element of a hosts file
-    class EmptyElement < Element
-
-      # Initializes an empty Element
-      #
-      # @param [Hash] options
-      # @option options [String] :cache sets a cached String representation
-      def initialize(options = {})
-        validate_options(options, :cache)
-
-        @cache = options[:cache]
-      end
+    # Helper methods used internally in the hosts library
+    #
+    # @private
+    module Helpers
 
       protected
 
-      # Defines the algorithm to generate a String representation from scratch.
+      # Ensures that an options Hash has includes only valid keys
       #
-      # @return [String] a generated String representation
-      def generate_string(options = {})
-        "\n"
+      # @param [Hash] options the options Hash to verify
+      # @param [Array<Symbol>] valid_keys a list of valid keys for the Hash
+      # @raise [ArgumentError] if Hash includes invalid keys
+      def validate_options(options, *valid_keys)
+        remainder = options.keys - valid_keys
+
+        unless remainder.empty?
+          raise ArgumentError, "Invalid option keys: :#{remainder.join(',')}"
+        end
       end
 
+      # Casts a given object to Pathname or passes through a given nil
+      #
+      # @param [String, Pathname, nil] path a filesystem path
+      # @return [Pathname, nil]
+      def to_pathname(path)
+        path.nil? ? nil : Pathname.new(path)
+      end
+      
     end
   end
 end
-

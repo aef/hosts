@@ -24,8 +24,12 @@ module Aef
 
     # Represents a comment-only line as element of a hosts file
     class Comment < Element
+      
       define_attribute_methods [:comment]
 
+      # The comment
+      #
+      # @return [String]
       attr_accessor :comment
 
       # Initializes a comment
@@ -34,8 +38,7 @@ module Aef
       # @param options [Hash]
       # @option options [String] :cache sets a cached String representation
       def initialize(comment, options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_initialize)
+        validate_options(options, :cache)
 
         raise ArgumentError, 'Comment cannot be empty' unless comment
 
@@ -43,17 +46,13 @@ module Aef
         @cache   = options[:cache]
       end
 
-      # @attribute [String] comment the comment ifself
+      # Sets the comment
       def comment=(comment)
         comment_will_change! unless comment.equal?(@comment)
         @comment = comment
       end
 
       protected
-
-      def self.valid_option_keys_for_initialize
-        @valid_option_keys_for_initialize ||= [:comment, :cache].freeze
-      end
 
       # Defines the algorithm to generate a String representation from scratch.
       #

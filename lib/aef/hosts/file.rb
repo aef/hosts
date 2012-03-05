@@ -27,15 +27,32 @@ module Aef
     # It is able to parse host files from file-system or String and can
     # generate a String representation of itself to String or file-system
     class File
+
+      include Helpers
+
+      # Regular expression to extract a comment line
+      #
+      # @private
       COMMENT_LINE_PATTERN   = /^\s*#(.*)$/
+
+      # Regular expression to extract section headers and footers
+      #
+      # @private
       SECTION_MARKER_PATTERN = /^ -----(BEGIN|END) SECTION (.*)-----(?:[\r])?$/
+
+      # Regular expression to extract entry lines
+      #
+      # @private
       ENTRY_LINE_PATTERN     = /^([^#]*)(?:#(.*))?$/
 
-      # FIXME Make this appear as rw in documentation
-      # @return [Array<Aef::Hosts::Element>] the hosts file's elements
+      # The hosts file's elements
+      #
+      # @return [Array<Aef::Hosts::Element>]
       attr_reader :elements
 
-      # @return [Pathname, nil] the filesystem path of the hosts file
+      # The filesystem path of the hosts file
+      #
+      # @return [Pathname, nil]
       attr_reader :path
 
       # Initializes a file.
@@ -55,9 +72,9 @@ module Aef
         self
       end
 
-      # @attribute [Pathname] path path to the hosts file
+      # Sets the filesystem path of the hosts file
       def path=(path)
-        @path = Aef::Hosts.to_pathname(path)
+        @path = to_pathname(path)
       end
 
       # Parses a hosts file given as path
@@ -65,7 +82,7 @@ module Aef
       # @param [Pathname] path override the path attribute for this operation
       # @return [Aef::Hosts::File] a self reference
       def read(path = nil)
-        path = path.nil? ? @path : Aef::Hosts.to_pathname(path)
+        path = path.nil? ? @path : to_pathname(path)
 
         raise ArgumentError, 'No path given' unless path
 
@@ -152,12 +169,18 @@ module Aef
       # Generates a hosts file and writes it to a path
       #
       # @param [Hash] options
-      # @option options [Pathname] :path overrides the path attribute for this operation
+      # @option options [Pathname] :path overrides the path attribute for this
+      #   operation
+      # @option options [true, false] :force_generation if set to true, the
+      #   cache won't be used, even if it not empty
+      # @option options [:unix, :windows, :mac] :linebreak_encoding the
+      #   linebreak encoding of the result. If nothing is specified the result
+      #   will be encoded as if :unix was specified.
+      # @see Aef::Linebreak#encode
       def write(options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_write)
+        validate_options(options, :force_generation, :linebreak_encoding, :path)
 
-        path = options[:path].nil? ? @path : Aef::Hosts.to_pathname(options[:path])
+        path = options[:path].nil? ? @path : to_pathname(options[:path])
 
         raise ArgumentError, 'No path given' unless path
 
@@ -180,28 +203,17 @@ module Aef
       #   will be encoded as if :unix was specified.
       # @see Aef::Linebreak#encode
       def to_s(options = {})
-        Aef::Hosts.validate_options(options,
-          self.class.valid_option_keys_for_to_s)
+        validate_options(options, :force_generation, :linebreak_encoding)
 
         string = ''
 
         @elements.each do |element|
-          string += element.to_s(options)
+          string << element.to_s(options)
         end
 
         string
       end
 
-      # Defines valid keys for the option hash of the write method
-      def self.valid_option_keys_for_write
-        (valid_option_keys_for_to_s + [:path]).freeze
-      end
-
-      # Defines valid keys for the option hash of the to_s method
-      def self.valid_option_keys_for_to_s
-        Aef::Hosts::Element.valid_option_keys_for_to_s
-      end
-      
     end
   end
 end

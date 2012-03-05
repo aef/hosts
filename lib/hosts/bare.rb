@@ -17,7 +17,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 =end
 
-# Require this file if you don't want the Aef::Hosts namespace to be
-# included into Object.
+# Require this file if you don't want an alias for Aef::Hosts named simply
+# Hosts.
 
 require 'aef/hosts'
