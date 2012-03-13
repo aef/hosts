@@ -25,35 +25,53 @@ module Aef
     # This class represents a hosts file and aggregates its elements.
     #
     # It is able to parse host files from file-system or String and can
-    # generate a String representation of itself to String or file-system
+    # generate a String representation of itself to String or file-system.
     class File
 
       include Helpers
 
-      # Regular expression to extract a comment line
+      # Regular expression to extract a comment line.
       #
       # @private
       COMMENT_LINE_PATTERN   = /^\s*#(.*)$/
 
-      # Regular expression to extract section headers and footers
+      # Regular expression to extract section headers and footers.
       #
       # @private
       SECTION_MARKER_PATTERN = /^ -----(BEGIN|END) SECTION (.*)-----(?:[\r])?$/
 
-      # Regular expression to extract entry lines
+      # Regular expression to extract entry lines.
       #
       # @private
       ENTRY_LINE_PATTERN     = /^([^#]*)(?:#(.*))?$/
 
-      # The hosts file's elements
+      # The hosts file's elements.
       #
       # @return [Array<Aef::Hosts::Element>]
-      attr_reader :elements
+      attr_accessor :elements
 
-      # The filesystem path of the hosts file
+      # The filesystem path of the hosts file.
       #
       # @return [Pathname, nil]
       attr_reader :path
+
+      class << self
+        # Parses a hosts file given as path.
+        #
+        # @param [Pathname] the hosts file path
+        # @return [Aef::Hosts::File] a file
+        def read(path)
+          new(path).read
+        end
+
+        # Parses a hosts file given as String.
+        #
+        # @param [String] data a String representation of the hosts file
+        # @return [Aef::Hosts::File] a file
+        def parse(data)
+          new.parse(data)
+        end
+      end
 
       # Initializes a file.
       #
@@ -72,12 +90,23 @@ module Aef
         self
       end
 
-      # Sets the filesystem path of the hosts file
+      # Deletes the cached String representations of all elements.
+      #
+      # @return [Aef::Hosts::File] a self reference
+      def invalidate_cache!
+        elements.each do |element|
+          element.invalidate_cache!
+        end
+
+        self
+      end
+
+      # Sets the filesystem path of the hosts file.
       def path=(path)
         @path = to_pathname(path)
       end
 
-      # Parses a hosts file given as path
+      # Parses a hosts file given as path.
       #
       # @param [Pathname] path override the path attribute for this operation
       # @return [Aef::Hosts::File] a self reference
@@ -91,7 +120,7 @@ module Aef
         self
       end
 
-      # Parses a hosts file given as String
+      # Parses a hosts file given as String.
       #
       # @param [String] data a String representation of the hosts file
       # @return [Aef::Hosts::File] a self reference
@@ -101,7 +130,7 @@ module Aef
         line_number = 1
 
         data.to_s.each_line do |line|
-          line = Aef::Linebreak.encode(line, :unix)
+          line = Linebreak.encode(line, :unix)
 
           line_number += 1
 
@@ -114,24 +143,25 @@ module Aef
 
               case type
               when 'BEGIN'
-                unless current_section.name
-                  current_section = Aef::Hosts::Section.new(
+                unless current_section.is_a?(Section)
+                  current_section = Section.new(
                     name,
                     :cache => {:header => line, :footer => nil}
                   )
                 else
-                  raise Aef::Hosts::ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' in #{path.realpath} on line #{line_number}"
+                  raise ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' on line #{line_number}."
                 end
               when 'END'
                 if name == current_section.name
                   current_section.cache[:footer] = line
-                  current_section = add_section
+                  elements << current_section
+                  current_section = self
                 else
-                  raise Aef::Hosts::ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' in #{path.realpath} on line #{line_number}"
+                  raise ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' on line #{line_number}."
                 end
               end
             else
-              current_section.elements << Aef::Hosts::Comment.new(
+              current_section.elements << Comment.new(
                 comment,
                 :cache => line
               )
@@ -149,14 +179,14 @@ module Aef
 
               address, name, *aliases = *split
 
-              current_section.elements << Aef::Hosts::Entry.new(
+              current_section.elements << Entry.new(
                 address, name,
                 :aliases => aliases,
                 :comment => comment,
                 :cache   => line
               )
             else
-              current_section.elements << Aef::Hosts::EmptyElement.new(
+              current_section.elements << EmptyElement.new(
                 :cache => line
               )
             end
@@ -166,7 +196,7 @@ module Aef
         self
       end
 
-      # Generates a hosts file and writes it to a path
+      # Generates a hosts file and writes it to a path.
       #
       # @param [Hash] options
       # @option options [Pathname] :path overrides the path attribute for this
@@ -193,8 +223,15 @@ module Aef
         true
       end
 
-      alias inspect to_s
+      # A String representation for debugging purposes.
+      #
+      # @return [String]
+      def inspect
+        generate_inspect(:elements)
+      end
 
+      # A String representation of the hosts file.
+      #
       # @param [Hash] options
       # @option options [true, false] :force_generation if set to true, the
       #   cache won't be used, even if it not empty

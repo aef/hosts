@@ -32,7 +32,7 @@ module Aef
       def initialize(options = {})
         validate_options(options, :cache)
 
-        @cache = options[:cache]
+        @cache = options[:cache].to_s unless options[:cache].nil?
       end
 
       protected

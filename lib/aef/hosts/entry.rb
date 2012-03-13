@@ -62,11 +62,11 @@ module Aef
         raise ArgumentError, 'Address cannot be empty' unless address
         raise ArgumentError, 'Name cannot be empty' unless name
 
-        @address = address
-        @name    = name
+        @address = address.to_s
+        @name    = name.to_s
         @aliases = options[:aliases] || []
-        @comment = options[:comment]
-        @cache   = options[:cache]
+        @comment = options[:comment].to_s if options[:comment]
+        @cache   = options[:cache].to_s if options[:cache]
       end
 
       # Sets the network address
@@ -93,6 +93,13 @@ module Aef
         @aliases = aliases
       end
 
+      # A String representation for debugging purposes
+      #
+      # @return [String]
+      def inspect
+        generate_inspect(:address, :name, :aliases, :comment, :cache)
+      end
+
       protected
 
       # Defines the algorithm to generate a String representation from scratch.
@@ -106,7 +113,7 @@ module Aef
           suffix = "\n"
         end
 
-        [address, name, *aliases].join(' ') + suffix
+        [address, name, *aliases].join(' ') << suffix
       end
 
     end

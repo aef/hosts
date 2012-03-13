@@ -35,13 +35,13 @@ module Aef
 
       # Cached String representation
       #
-      # @return [String, nil]
+      # @return [String, Hash, nil]
       attr_reader :cache
 
       # Deletes the cached String representation
       #
       # @return [Aef::Hosts::Element] a self reference
-      def invalidate_cache
+      def invalidate_cache!
         @cache = nil
 
         self
@@ -54,7 +54,12 @@ module Aef
         @cache ? true : false
       end
 
-      alias inspect to_s
+      # A String representation for debugging purposes
+      #
+      # @return [String]
+      def inspect
+        generate_inspect(:cache)
+      end
 
       # Provides a String representation of the element
       #
@@ -70,10 +75,7 @@ module Aef
 
         string = ''
 
-        if not cache_filled? or
-           options[:force_generation] or
-           changed?
-
+        if !cache_filled? || options[:force_generation] || changed?
           string << generate_string(options)
         else
           string << cache_string(options)

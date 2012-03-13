@@ -17,9 +17,9 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 =end
 
+require 'bundler/gem_tasks'
 require 'rake'
 require 'pathname'
-require 'bundler/gem_tasks'
 require 'yard'
 require 'rspec/core/rake_task'
 
@@ -39,6 +39,7 @@ end
 
 desc "Opens an interactive console with the library loaded"
 task :console do
+  Bundler.setup
   require 'pry'
   require 'hosts'
   Pry.start

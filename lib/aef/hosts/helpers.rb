@@ -49,7 +49,50 @@ module Aef
       def to_pathname(path)
         path.nil? ? nil : Pathname.new(path)
       end
-      
+
+      # Generates a string representation for debugging purposes.
+      #
+      # @param [Array<Symbol, String>] attributes to be displayed. If given as
+      #   Symbol, the attribute's value will be presented by name and the
+      #   inspect output of its value. If given as String, the String will
+      #   represent it instead.
+      # @return [String] a string representation for debugging purposes
+      def generate_inspect(*attributes)
+        string = "#<#{self.class}"
+
+        components = []
+
+        attributes.each do |attribute|
+          if attribute == :cache
+            components << 'cached!' if send(:cache_filled?)
+          elsif attribute == :elements
+            components << generate_elements_partial(elements)
+          elsif attribute.is_a?(Symbol)
+            components << "#{attribute}=#{send(attribute).inspect}"
+          else
+            components << attribute
+          end          
+        end
+
+        components.unshift(':') unless components.empty?
+        
+        string << components.join(' ')
+        string << '>'
+      end
+
+      # Generate a partial String for an element listing in inspect output.
+      #
+      # @return [String] element partial
+      def generate_elements_partial(elements)
+        elements_string = "elements={\n"
+
+        elements.each do |element|
+          elements_string << " #{element.inspect}\n"
+        end
+
+        elements_string << "}"
+      end
+
     end
   end
 end

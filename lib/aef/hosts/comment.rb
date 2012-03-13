@@ -39,17 +39,24 @@ module Aef
       # @option options [String] :cache sets a cached String representation
       def initialize(comment, options = {})
         validate_options(options, :cache)
-
+        
         raise ArgumentError, 'Comment cannot be empty' unless comment
 
-        @comment = comment
-        @cache   = options[:cache]
+        @comment = comment.to_s
+        @cache   = options[:cache].to_s unless options[:cache].nil?
       end
 
       # Sets the comment
       def comment=(comment)
         comment_will_change! unless comment.equal?(@comment)
         @comment = comment
+      end
+
+      # A String representation for debugging purposes
+      #
+      # @return [String]
+      def inspect
+        generate_inspect(:comment, :cache)
       end
 
       protected

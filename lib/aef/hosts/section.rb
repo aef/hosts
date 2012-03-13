@@ -36,7 +36,7 @@ module Aef
       # Elements inside the section
       #
       # @return [Aef::Host::Element]
-      attr_reader :elements
+      attr_accessor :elements
 
       # Initializes a section
       #
@@ -50,9 +50,22 @@ module Aef
 
         raise ArgumentError, 'Name cannot be empty' unless name
 
-        @name     = name
+        @name     = name.to_s
         @elements = options[:elements] || []
         @cache    = options[:cache] || {:header => nil, :footer => nil}
+      end
+
+      # Deletes the cached String representation
+      #
+      # @return [Aef::Hosts::Section] a self reference
+      def invalidate_cache!(options = {})
+        @cache = {:header => nil, :footer => nil}
+
+        unless options[:only_section]
+          elements.each do |element|
+            element.invalidate_cache!
+          end
+        end
       end
 
       # Tells if a String representation is cached or not
@@ -66,6 +79,13 @@ module Aef
       def name=(name)
         name_will_change! unless name.equal?(@name)
         @name = name
+      end
+
+      # A String representation for debugging purposes
+      #
+      # @return [String]
+      def inspect
+        generate_inspect(:name, :cache, :elements)
       end
 
       protected

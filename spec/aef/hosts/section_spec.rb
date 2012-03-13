@@ -20,82 +20,80 @@ PERFORMANCE OF THIS SOFTWARE.
 require 'spec_helper'
 
 describe Aef::Hosts::Section do
-  before(:each) do
-    @element = described_class.new('some name')
-  end
+  let(:element) { described_class.new('some name') }
 
   describe "name attribute" do
     it "should exist" do
-      @element.should respond_to(:name)
+      element.should respond_to(:name)
     end
 
     it "should be settable" do
-      @element.should respond_to(:name=)
+      element.should respond_to(:name=)
 
-      @element.name = 'demo section'
+      element.name = 'demo section'
 
-      @element.name.should == 'demo section'
+      element.name.should == 'demo section'
     end
 
     it "should be settable through the constructor" do
-      @element = Aef::Hosts::Section.new('demo section')
+      element = Aef::Hosts::Section.new('demo section')
 
-      @element.name.should == 'demo section'
+      element.name.should == 'demo section'
     end
     
     it "should be a mandatory argument of the constructor" do
       lambda {
-        @element = Aef::Hosts::Section.new(nil)
+        element = Aef::Hosts::Section.new(nil)
       }.should raise_error(ArgumentError)
     end
     
     it "should flag the object as changed if modified" do
       lambda {
-        @element.name = 'demo section'
-      }.should change{ @element.changed? }.from(false).to(true)
+        element.name = 'demo section'
+      }.should change{ element.changed? }.from(false).to(true)
     end
   end
   
   describe "cache attribute" do
     it "should exist" do
-      @element.should respond_to(:cache)
+      element.should respond_to(:cache)
     end
 
     it "should be nil by default" do
-      @element.cache.should == {:footer => nil, :header => nil}
+      element.cache.should == {:footer => nil, :header => nil}
     end
 
     it "should not be allowed to be set" do
-      @element.should_not respond_to(:cache=)
+      element.should_not respond_to(:cache=)
     end
 
     it "should be settable through the constructor" do
-      @element = Aef::Hosts::Section.new('demo section', :cache => {
+      element = Aef::Hosts::Section.new('demo section', :cache => {
           :header => "# -----BEGIN SECTION demo section-----    \n",
           :footer => "# -----END SECTION demo section-----\t\t\t\n"
       })
       
-      @element.cache.should == {
+      element.cache.should == {
         :header => "# -----BEGIN SECTION demo section-----    \n",
         :footer => "# -----END SECTION demo section-----\t\t\t\n"
       }
     end
 
     it "should be correctly reported as empty by cache_filled?" do
-      @element.should respond_to(:cache_filled?)
+      element.should respond_to(:cache_filled?)
 
-      @element.cache_filled?.should be_false
+      element.cache_filled?.should be_false
     end
 
     it "should be correctly reported as filled by cache_filled?" do
-      @element = Aef::Hosts::Section.new('demo section', :cache => {
+      element = Aef::Hosts::Section.new('demo section', :cache => {
           :header => "# -----BEGIN SECTION demo section-----    \n",
           :footer => "# -----END SECTION demo section-----\t\t\t\n"
       })
       
-      @element.should respond_to(:cache_filled?)
+      element.should respond_to(:cache_filled?)
 
-      @element.cache_filled?.should be_true
+      element.cache_filled?.should be_true
     end
 
     it "should be invalidatable" do
@@ -104,9 +102,10 @@ describe Aef::Hosts::Section do
           :footer => "# -----END SECTION demo section-----\t\t\t\n"
       })
 
-      @element.invalidate_cache
+      element.invalidate_cache!
 
-      @element.cache.should be_nil
+      element.cache[:header].should be_nil
+      element.cache[:footer].should be_nil
     end
   end
 
@@ -124,37 +123,37 @@ describe Aef::Hosts::Section do
     end
   
     it "should generate a new representation if no cache is available" do
-      @element = Aef::Hosts::Section.new('demo section')
+      element = Aef::Hosts::Section.new('demo section')
 
-      @element.to_s.should == <<-EOS
+      element.to_s.should == <<-EOS
 # -----BEGIN SECTION demo section-----
 # -----END SECTION demo section-----
       EOS
     end
     
     it "should respond with a duplicate of the cached representation if cache is filled" do
-      @element = Aef::Hosts::Section.new('demo section', :cache => {
+      element = Aef::Hosts::Section.new('demo section', :cache => {
         :header => "# -----BEGIN SECTION demo section-----    \n",
         :footer => "# -----END SECTION demo section-----    \n"
       })
 
-      @element.to_s.should == <<-EOS
+      element.to_s.should == <<-EOS
 # -----BEGIN SECTION demo section-----    
 # -----END SECTION demo section-----    
       EOS
 
       # Should not be identical
-      @element.to_s.should_not equal(@element.cache[:footer])
-      @element.to_s.should_not equal(@element.cache[:header])
+      element.to_s.should_not equal(element.cache[:footer])
+      element.to_s.should_not equal(element.cache[:header])
     end
 
     it "should respond with a duplicate of the cached representation if cache is filled" do
-      @element = Aef::Hosts::Section.new('demo section', :cache => {
+      element = Aef::Hosts::Section.new('demo section', :cache => {
         :header => "# -----BEGIN SECTION demo section-----    \n",
         :footer => "# -----END SECTION demo section-----    \n"
       })
 
-      @element.to_s(:force_generation => true).should == <<-EOS
+      element.to_s(:force_generation => true).should == <<-EOS
 # -----BEGIN SECTION demo section-----
 # -----END SECTION demo section-----
       EOS
@@ -165,7 +164,7 @@ describe Aef::Hosts::Section do
       sub_element_with_cache       = Aef::Hosts::ChildElement.new
       sub_element_with_cache.cache = "cached element representation\n"
     
-      @element = Aef::Hosts::Section.new('demo section',
+      element = Aef::Hosts::Section.new('demo section',
         :elements => [
           sub_element_with_cache,
           sub_element_without_cache
@@ -176,7 +175,7 @@ describe Aef::Hosts::Section do
         }
       )
 
-      @element.to_s.should == <<-EOS
+      element.to_s.should == <<-EOS
 # -----BEGIN SECTION demo section-----    
 cached element representation
 uncached element representation
@@ -189,7 +188,7 @@ uncached element representation
       sub_element_with_cache       = Aef::Hosts::ChildElement.new
       sub_element_with_cache.cache = "cached element representation\n"
     
-      @element = Aef::Hosts::Section.new('demo section',
+      element = Aef::Hosts::Section.new('demo section',
         :elements => [
           sub_element_with_cache,
           sub_element_without_cache
@@ -200,7 +199,7 @@ uncached element representation
         }
       )
 
-      @element.to_s(:force_generation => true).should == <<-EOS
+      element.to_s(:force_generation => true).should == <<-EOS
 # -----BEGIN SECTION demo section-----
 uncached element representation
 uncached element representation
