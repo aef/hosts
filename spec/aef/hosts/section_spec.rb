@@ -109,6 +109,56 @@ describe Aef::Hosts::Section do
     end
   end
 
+  context "#invalidate_cache!" do
+    it "should clear the cache of the section and its elements" do
+      child_a = 'markov'
+      child_b = 'chainey'
+
+      child_a.should_receive(:invalidate_cache!)
+      child_b.should_receive(:invalidate_cache!)
+
+      element.elements << child_a
+      element.elements << child_b
+
+      element.invalidate_cache!
+    end
+
+    it "should clear the cache of the section only if :only_section is set" do
+      child_a = 'markov'
+      child_b = 'chainey'
+
+      child_a.should_not_receive(:invalidate_cache!)
+      child_b.should_not_receive(:invalidate_cache!)
+
+      element.elements << child_a
+      element.elements << child_b
+
+      element.invalidate_cache!(:only_section => true)
+    end
+  end
+
+  context "#inspect" do
+    it "should be able to generate a debugging String" do
+      element.inspect.should eql %{#<Aef::Hosts::Section: name="some name" elements=[]>}
+    end
+
+    it "should be able to generate a debugging String with elements" do
+      element.elements << 'fnord'
+      element.elements << 'eris'
+      element.inspect.should eql <<-STRING.chomp
+#<Aef::Hosts::Section: name="some name" elements=[
+  "fnord",
+  "eris"
+]>
+      STRING
+    end
+
+    it "should be able to generate a debugging String with cache filled" do
+      element = Aef::Hosts::Section.new('demo section', :cache => {:header => 'abc', :footer => 'xyz'})
+      element.inspect.should eql %{#<Aef::Hosts::Section: name="demo section" cached! elements=[]>}
+    end
+  end
+
   describe "string generation" do
     before(:all) do
       class Aef::Hosts::ChildElement < Aef::Hosts::Element

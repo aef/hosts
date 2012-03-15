@@ -188,6 +188,28 @@ describe Aef::Hosts::Entry do
     end
   end
 
+  context "#inspect" do
+    it "should be able to generate a debugging String" do
+      element.inspect.should eql %{#<Aef::Hosts::Entry: address="192.168.0.1" name="somehost" aliases=[] comment=nil>}
+    end
+
+    it "should be able to generate a debugging String with aliases" do
+      element.aliases << 'fnord'
+      element.aliases << 'eris'
+      element.inspect.should eql %{#<Aef::Hosts::Entry: address="192.168.0.1" name="somehost" aliases=["fnord", "eris"] comment=nil>}
+    end
+
+    it "should be able to generate a debugging String with comment" do
+      element.comment = "This is not the host you're looking for"
+      element.inspect.should eql %{#<Aef::Hosts::Entry: address="192.168.0.1" name="somehost" aliases=[] comment="This is not the host you're looking for">}
+    end
+
+    it "should be able to generate a debugging String with cache filled" do
+      element = Aef::Hosts::Entry.new('192.168.0.1', 'somehost', :cache => 'Some cache...')
+      element.inspect.should eql %{#<Aef::Hosts::Entry: address="192.168.0.1" name="somehost" aliases=[] comment=nil cached!>}
+    end
+  end
+
   describe "string generation" do
     it "should generate a new representation if no cache is available" do
       element = Aef::Hosts::Entry.new('127.0.0.1', 'localhost',

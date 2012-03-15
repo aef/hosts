@@ -58,7 +58,7 @@ module Aef
       #
       # @return [String]
       def inspect
-        generate_inspect(:cache)
+        generate_inspect(self, :cache)
       end
 
       # Provides a String representation of the element

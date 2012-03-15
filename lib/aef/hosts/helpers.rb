@@ -38,7 +38,7 @@ module Aef
         remainder = options.keys - valid_keys
 
         unless remainder.empty?
-          raise ArgumentError, "Invalid option keys: :#{remainder.join(',')}"
+          raise ArgumentError, "Invalid option keys: #{remainder.map(&:inspect).join(',')}"
         end
       end
 
@@ -50,28 +50,29 @@ module Aef
         path.nil? ? nil : Pathname.new(path)
       end
 
-      # Generates a string representation for debugging purposes.
+      # Generates a String representation for debugging purposes.
       #
-      # @param [Array<Symbol, String>] attributes to be displayed. If given as
-      #   Symbol, the attribute's value will be presented by name and the
-      #   inspect output of its value. If given as String, the String will
-      #   represent it instead.
+      # @param [Object] model a model for which the String is generated
+      # @param [Array<Symbol, String>] attributes Attributes to be displayed.
+      #   If given as Symbol, the attribute's value will be presented by name
+      #   and the inspect output of its value. If given as String, the String
+      #   will represent it instead.
       # @return [String] a string representation for debugging purposes
-      def generate_inspect(*attributes)
-        string = "#<#{self.class}"
+      def generate_inspect(model, *attributes)
+        string = "#<#{model.class}"
 
         components = []
 
         attributes.each do |attribute|
           if attribute == :cache
-            components << 'cached!' if send(:cache_filled?)
+            components << 'cached!' if model.send(:cache_filled?)
           elsif attribute == :elements
-            components << generate_elements_partial(elements)
+            components << generate_elements_partial(model.elements)
           elsif attribute.is_a?(Symbol)
-            components << "#{attribute}=#{send(attribute).inspect}"
+            components << "#{attribute}=#{model.send(attribute).inspect}"
           else
             components << attribute
-          end          
+          end
         end
 
         components.unshift(':') unless components.empty?
@@ -84,13 +85,17 @@ module Aef
       #
       # @return [String] element partial
       def generate_elements_partial(elements)
-        elements_string = "elements={\n"
+        elements_string = 'elements=['
 
-        elements.each do |element|
-          elements_string << " #{element.inspect}\n"
+        unless elements.empty?
+          elements_string << "\n"
+          elements_string << elements.map{|element|
+            element.inspect.lines.map{|line| "  #{line}"}.join
+          }.join(",\n")
+          elements_string << "\n"
         end
 
-        elements_string << "}"
+        elements_string << "]"
       end
 
     end

@@ -19,7 +19,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 unless defined?(Rubinius)
   require 'simplecov'
-  SimpleCov.start
+  SimpleCov.start do
+    add_filter "/spec/"
+  end
 end
 
 require 'set'

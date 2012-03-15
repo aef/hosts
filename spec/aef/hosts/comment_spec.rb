@@ -96,6 +96,17 @@ describe Aef::Hosts::Comment do
     end
   end
 
+  context "#inspect" do
+    it "should be able to generate a debugging String" do
+      element.inspect.should eql %{#<Aef::Hosts::Comment: comment="some comment">}
+    end
+
+    it "should be able to generate a debugging String with cache" do
+      element = Aef::Hosts::Comment.new('some comment', :cache => 'abc')
+      element.inspect.should eql %{#<Aef::Hosts::Comment: comment="some comment" cached!>}
+    end
+  end
+
   describe "string generation" do
     it "should generate a new representation if no cache is available" do
       element = Aef::Hosts::Comment.new('some comment')

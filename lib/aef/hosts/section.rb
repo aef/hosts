@@ -57,6 +57,9 @@ module Aef
 
       # Deletes the cached String representation
       #
+      # @param [Hash] options
+      # @option [true, false] :only_section if set to true, the invalidation
+      #   will not cascade onto the elements. Default is false.
       # @return [Aef::Hosts::Section] a self reference
       def invalidate_cache!(options = {})
         @cache = {:header => nil, :footer => nil}
@@ -85,7 +88,7 @@ module Aef
       #
       # @return [String]
       def inspect
-        generate_inspect(:name, :cache, :elements)
+        generate_inspect(self, :name, :cache, :elements)
       end
 
       protected

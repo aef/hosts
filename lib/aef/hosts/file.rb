@@ -227,7 +227,7 @@ module Aef
       #
       # @return [String]
       def inspect
-        generate_inspect(:elements)
+        generate_inspect(self, :path, :elements)
       end
 
       # A String representation of the hosts file.

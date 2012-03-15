@@ -58,6 +58,13 @@ describe Aef::Hosts::File do
       file.path = hosts_file
     end
   
+    it "should be possible through the .read method" do
+      file = Aef::Hosts::File.read(hosts_file)
+
+      file.elements.should_not be_empty
+      file.path.should eql Pathname.new(hosts_file)
+    end
+
     it "should be possible through the #read method" do
       file.should respond_to(:read)
 
@@ -79,6 +86,12 @@ describe Aef::Hosts::File do
       file.path = hosts_file
     end
   
+    it "should be possible through the .parse method" do
+      file = Aef::Hosts::File.parse(hosts_file.read)
+
+      file.elements.should_not be_empty
+    end
+
     it "should be possible through the #parse method" do
       file.should respond_to(:parse)
 
@@ -88,7 +101,64 @@ describe Aef::Hosts::File do
     end
     
   end
-    
+
+  context "#invalidate_cache!" do
+    it "should clear the cache of the file's elements" do
+      child_a = 'markov'
+      child_b = 'chainey'
+
+      child_a.should_receive(:invalidate_cache!)
+      child_b.should_receive(:invalidate_cache!)
+
+      file.elements << child_a
+      file.elements << child_b
+
+      file.invalidate_cache!
+    end
+  end
+
+  context "#inspect" do
+    it "should be able to generate a debugging String" do
+      file.inspect.should eql %{#<Aef::Hosts::File: path=nil elements=[]>}
+    end
+
+    it "should be able to generate a debugging String with path" do
+      file.path = hosts_file
+      file.inspect.should eql %{#<Aef::Hosts::File: path=#<Pathname:#{hosts_file}> elements=[]>}
+    end
+
+    it "should be able to generate a debugging String with cascaded elements" do
+      section = Aef::Hosts::Section.new('new section', :elements => [
+        'fnord',
+        'eris'
+      ])
+
+      file.elements << section
+      file.elements << 'hagbard'
+
+      file.inspect.should eql <<-STRING.chomp
+#<Aef::Hosts::File: path=nil elements=[
+  #<Aef::Hosts::Section: name="new section" elements=[
+    "fnord",
+    "eris"
+  ]>,
+  "hagbard"
+]>
+      STRING
+    end
+
+    it "should be able to generate a debugging String with elements" do
+      file.elements << 'fnord'
+      file.elements << 'eris'
+      file.inspect.should eql <<-STRING.chomp
+#<Aef::Hosts::File: path=nil elements=[
+  "fnord",
+  "eris"
+]>
+      STRING
+    end
+  end
+  
   describe "string generation" do
     it "should produce unchanged output if nothing changed" do
       file.path = hosts_file

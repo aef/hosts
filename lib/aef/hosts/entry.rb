@@ -97,7 +97,7 @@ module Aef
       #
       # @return [String]
       def inspect
-        generate_inspect(:address, :name, :aliases, :comment, :cache)
+        generate_inspect(self, :address, :name, :aliases, :comment, :cache)
       end
 
       protected

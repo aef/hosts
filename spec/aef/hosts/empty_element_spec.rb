@@ -64,6 +64,17 @@ describe Aef::Hosts::EmptyElement do
     end
   end
 
+  context "#inspect" do
+    it "should be able to generate a debugging String" do
+      element.inspect.should eql %{#<Aef::Hosts::EmptyElement>}
+    end
+
+    it "should be able to generate a debugging String with cache filled" do
+      element = Aef::Hosts::EmptyElement.new(:cache => "   \n")
+      element.inspect.should eql %{#<Aef::Hosts::EmptyElement: cached!>}
+    end
+  end
+
   describe "string generation" do
     it "should generate new output if no cache is available" do
       element.to_s.should == "\n"

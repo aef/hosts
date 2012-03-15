@@ -56,7 +56,7 @@ module Aef
       #
       # @return [String]
       def inspect
-        generate_inspect(:comment, :cache)
+        generate_inspect(self, :comment, :cache)
       end
 
       protected
