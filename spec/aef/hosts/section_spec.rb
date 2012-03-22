@@ -42,15 +42,54 @@ describe Aef::Hosts::Section do
     end
     
     it "should be a mandatory argument of the constructor" do
-      lambda {
+      expect {
         element = Aef::Hosts::Section.new(nil)
-      }.should raise_error(ArgumentError)
+      }.to raise_error(ArgumentError)
     end
     
     it "should flag the object as changed if modified" do
-      lambda {
+      element = Aef::Hosts::Section.new('some name', :cache => {
+        :header => "# -----BEGIN SECTION some name-----    \n",
+        :footer => "# -----END SECTION some name-----    \n"
+      })
+
+      expect {
         element.name = 'demo section'
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
+    end
+  end
+  
+  describe "elements attribute" do
+    it "should exist" do
+      element.should respond_to(:elements)
+    end
+
+    it "should be settable" do
+      element.should respond_to(:elements=)
+
+      element.elements = ['abc', 'def']
+
+      element.elements.should eql ['abc', 'def']
+    end
+
+    it "should be settable through the constructor" do
+      element = Aef::Hosts::Section.new('name', :elements => ['abc', 'def'])
+
+      element.elements.should eql ['abc', 'def']
+    end
+    
+    it "should flag the object as changed if modified" do
+      child_element = 'abc'
+      element = Aef::Hosts::Section.new('some name', :cache => {
+        :header => "# -----BEGIN SECTION some name-----    \n",
+        :footer => "# -----END SECTION some name-----    \n"
+      }, :elements => [child_element])
+
+      child_element.should_not_receive(:invalidate_cache!)
+
+      expect {
+        element.elements = [child_element, 'def']
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
   

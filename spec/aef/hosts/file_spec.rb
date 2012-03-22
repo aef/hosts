@@ -68,9 +68,9 @@ describe Aef::Hosts::File do
     it "should be possible through the #read method" do
       file.should respond_to(:read)
 
-      lambda {
+      expect {
         file.read.should == file
-      }.should change{ file.elements.length }
+      }.to change{ file.elements.length }
     end
     
     it "should allow the path attribute to be temporarily overridden" do
@@ -95,11 +95,84 @@ describe Aef::Hosts::File do
     it "should be possible through the #parse method" do
       file.should respond_to(:parse)
 
-      lambda {
+      expect {
         file.parse(hosts_file.read).should == file
-      }.should change{ file.elements.length }      
+      }.to change{ file.elements.length }      
+    end
+
+    it "should be able to parse an empty element" do
+      file.parse(<<-HOSTS)
+
+      HOSTS
+
+      file.elements.should have(1).item
+      file.elements.first.should be_a(Aef::Hosts::EmptyElement)
+      file.elements.first.cache_filled?.should be_true
     end
     
+    it "should be able to parse a comment" do
+      file.parse(<<-HOSTS)
+# test
+      HOSTS
+
+      file.elements.should have(1).item
+      element = file.elements.first
+      element.should be_a(Aef::Hosts::Comment)
+      element.cache_filled?.should be_true
+      element.comment.should eql ' test'
+    end
+
+    it "should be able to parse an entry" do
+      file.parse(<<-HOSTS)
+10.23.5.17  myhost  myhost.mydomain    altname  # entry
+      HOSTS
+
+      file.elements.should have(1).item
+      element = file.elements.first
+      element.should be_a(Aef::Hosts::Entry)
+      element.cache_filled?.should be_true
+      element.address.should eql '10.23.5.17'
+      element.name.should eql 'myhost'
+      element.aliases.should eql ['myhost.mydomain', 'altname']
+      element.comment.should eql ' entry'
+    end
+
+    it "should be able to parse a section" do
+      file.parse(<<-HOSTS)
+# -----BEGIN SECTION test-----
+# -----END SECTION test-----
+      HOSTS
+
+      file.elements.should have(1).item
+      element = file.elements.first
+      element.should be_a(Aef::Hosts::Section)
+      element.cache_filled?.should be_true
+      element.name.should eql 'test'
+    end
+
+    it "should complain about nested sections" do
+      hosts = <<-HOSTS
+# -----BEGIN SECTION outer-----
+# -----BEGIN SECTION inner-----
+# -----END SECTION inner-----
+# -----END SECTION outer-----
+      HOSTS
+
+      expect {
+        file.parse(hosts)
+      }.to raise_error(Aef::Hosts::ParserError, "Invalid cascading of sections. Cannot start new section 'inner' without first closing section 'outer' on line 2.")
+    end
+
+    it "should complain about closing the wrong section" do
+      hosts = <<-HOSTS
+# -----BEGIN SECTION correct-----
+# -----END SECTION incorrect-----
+      HOSTS
+
+      expect {
+        file.parse(hosts)
+      }.to raise_error(Aef::Hosts::ParserError, "Invalid closing of section. Found attempt to close section 'incorrect' in body of section 'correct' on line 2.")
+    end
   end
 
   context "#invalidate_cache!" do

@@ -42,15 +42,17 @@ describe Aef::Hosts::Entry do
     end
     
     it "should be a mandatory argument of the constructor" do
-      lambda {
+      expect {
         element = Aef::Hosts::Entry.new(nil, 'localhost')
-      }.should raise_error(ArgumentError)
+      }.to raise_error(ArgumentError)
     end
     
-    it "should flag the object as changed if modified" do
-      lambda {
+    it "should invalidate cache if modified" do
+      element = Aef::Hosts::Entry.new('192.168.0.1', 'somehost', :cache => '   192.168.0.1   somehost')
+
+      expect {
         element.address = '127.0.0.1'
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
 
@@ -74,15 +76,17 @@ describe Aef::Hosts::Entry do
     end
     
     it "should be a mandatory argument of the constructor" do
-      lambda {
+      expect {
         element = Aef::Hosts::Entry.new('127.0.0.1', nil)
-      }.should raise_error(ArgumentError)
+      }.to raise_error(ArgumentError)
     end
     
-    it "should flag the object as changed if modified" do
-      lambda {
+    it "should invalidate cache if modified" do
+      element = Aef::Hosts::Entry.new('192.168.0.1', 'somehost', :cache => '   192.168.0.1   somehost')
+
+      expect {
         element.name = 'localhost'
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
   
@@ -109,10 +113,12 @@ describe Aef::Hosts::Entry do
       element.comment.should == 'my comment'
     end
     
-    it "should flag the object as changed if modified" do
-      lambda {
+    it "should invalidate cache if modified" do
+      element = Aef::Hosts::Entry.new('127.0.0.1', 'localhost', :cache => '   127.0.0.1   localhost')
+
+      expect {
         element.comment = 'my comment'
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
   
@@ -139,10 +145,12 @@ describe Aef::Hosts::Entry do
       element.aliases.should == ['alias1', 'alias2']
     end
     
-    it "should flag the object as changed if modified" do
-      lambda {
+    it "should invalidate cache if modified" do
+      element = Aef::Hosts::Entry.new('192.168.0.1', 'somehost', :cache => '   192.168.0.1   somehost')
+
+      expect {
         element.aliases = ['alias1', 'alias2']
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
   

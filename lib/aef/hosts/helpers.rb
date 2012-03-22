@@ -98,6 +98,24 @@ module Aef
         elements_string << "]"
       end
 
+      # Sets a given attribute and executes the block if the current value
+      # differs from the given.
+      #
+      # @param [Symbol] attribute the attribute's name
+      # @param [Object] new_value the value to be assigned to the attribute if
+      #   it differs from its current value
+      # @yield Executed if current value differs from the given
+      def set_if_changed(attribute, new_value)
+        variable_name = :"@#{attribute}"
+        old_value = instance_variable_get(variable_name)
+
+        if new_value != old_value
+          instance_variable_set(variable_name, new_value)
+
+          yield if block_given?
+        end
+      end
+
     end
   end
 end

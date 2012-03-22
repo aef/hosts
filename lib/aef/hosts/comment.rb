@@ -25,12 +25,10 @@ module Aef
     # Represents a comment-only line as element of a hosts file
     class Comment < Element
       
-      define_attribute_methods [:comment]
-
       # The comment
       #
       # @return [String]
-      attr_accessor :comment
+      attr_reader :comment
 
       # Initializes a comment
       #
@@ -48,8 +46,9 @@ module Aef
 
       # Sets the comment
       def comment=(comment)
-        comment_will_change! unless comment.equal?(@comment)
-        @comment = comment
+        set_if_changed(:comment, comment.to_s) do
+          invalidate_cache!
+        end
       end
 
       # A String representation for debugging purposes

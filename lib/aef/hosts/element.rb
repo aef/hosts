@@ -30,9 +30,6 @@ module Aef
 
       include Helpers
 
-      # Used to automatically invalidate the cache if marked attributes are changed
-      include ActiveModel::Dirty
-
       # Cached String representation
       #
       # @return [String, Hash, nil]
@@ -75,7 +72,7 @@ module Aef
 
         string = ''
 
-        if !cache_filled? || options[:force_generation] || changed?
+        if !cache_filled? || options[:force_generation]
           string << generate_string(options)
         else
           string << cache_string(options)

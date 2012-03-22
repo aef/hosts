@@ -5,8 +5,8 @@ describe Aef::Hosts::Element do
   let(:element) { element_subclass.new }
 
   it "should complain about unimplemented #generate_string method" do
-    lambda {
+    expect {
       element.to_s
-    }.should raise_error(NotImplementedError)
+    }.to raise_error(NotImplementedError)
   end
 end

@@ -42,15 +42,17 @@ describe Aef::Hosts::Comment do
     end
     
     it "should be a mandatory argument of the constructor" do
-      lambda {
+      expect {
         element = Aef::Hosts::Comment.new(nil)
-      }.should raise_error(ArgumentError)
+      }.to raise_error(ArgumentError)
     end
     
-    it "should flag the object as changed if modified" do
-      lambda {
+    it "should invalidate the cache if modified" do
+      element = Aef::Hosts::Comment.new('some comment', :cache => '  #some comment')
+
+      expect {
         element.comment = 'my comment'
-      }.should change{ element.changed? }.from(false).to(true)
+      }.to change{ element.cache_filled? }.from(true).to(false)
     end
   end
   

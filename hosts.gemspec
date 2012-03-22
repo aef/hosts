@@ -43,7 +43,6 @@ files. When manipulating it tries to preserve their original formatting.
 
   s.required_ruby_version = '>= 1.8.7'
 
-  s.add_dependency('activemodel', '~> 3.2.1')
   s.add_dependency('linebreak', '~> 2.0.0')
 
   s.add_development_dependency('bundler', '~> 1.0.21')

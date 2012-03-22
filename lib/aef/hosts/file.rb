@@ -127,12 +127,8 @@ module Aef
       def parse(data)
         current_section = self
 
-        line_number = 1
-
-        data.to_s.each_line do |line|
+        data.to_s.lines.each_with_index do |line, line_number|
           line = Linebreak.encode(line, :unix)
-
-          line_number += 1
 
           if COMMENT_LINE_PATTERN =~ line
             comment = $1
@@ -149,7 +145,7 @@ module Aef
                     :cache => {:header => line, :footer => nil}
                   )
                 else
-                  raise ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' on line #{line_number}."
+                  raise ParserError, "Invalid cascading of sections. Cannot start new section '#{name}' without first closing section '#{current_section.name}' on line #{line_number + 1}."
                 end
               when 'END'
                 if name == current_section.name
@@ -157,7 +153,7 @@ module Aef
                   elements << current_section
                   current_section = self
                 else
-                  raise ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' on line #{line_number}."
+                  raise ParserError, "Invalid closing of section. Found attempt to close section '#{name}' in body of section '#{current_section.name}' on line #{line_number + 1}."
                 end
               end
             else

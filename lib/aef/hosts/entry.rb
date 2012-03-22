@@ -25,8 +25,6 @@ module Aef
     # Represents an entry line as element of a hosts file
     class Entry < Element
       
-      define_attribute_methods [:address, :name, :comment, :aliases]
-
       # The network address
       #
       # @return [String]
@@ -65,32 +63,36 @@ module Aef
         @address = address.to_s
         @name    = name.to_s
         @aliases = options[:aliases] || []
-        @comment = options[:comment].to_s if options[:comment]
-        @cache   = options[:cache].to_s if options[:cache]
+        @comment = options[:comment].to_s unless options[:comment].nil?
+        @cache   = options[:cache].to_s unless options[:cache].nil?
       end
 
       # Sets the network address
       def address=(address)
-        address_will_change! unless address.equal?(@address)
-        @address = address
+        set_if_changed(:address, address.to_s) do
+          invalidate_cache!
+        end
       end
 
       # Sets the primary hostname for the address
       def name=(name)
-        name_will_change! unless name.equal?(@name)
-        @name = name
+        set_if_changed(:name, name.to_s) do
+          invalidate_cache!
+        end
       end
 
       # Sets the optional comment
       def comment=(comment)
-        comment_will_change! unless comment.equal?(@comment)
-        @comment = comment
+        set_if_changed(:comment, comment.to_s) do
+          invalidate_cache!
+        end
       end
 
       # Sets the optional alias hostnames
       def aliases=(aliases)
-        aliases_will_change! unless aliases.equal?(@aliases)
-        @aliases = aliases
+        set_if_changed(:aliases, [*aliases]) do
+          invalidate_cache!
+        end
       end
 
       # A String representation for debugging purposes

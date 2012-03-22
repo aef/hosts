@@ -26,8 +26,6 @@ module Aef
     # header, futher included elements and a footer
     class Section < Element
 
-      define_attribute_methods [:name]
-
       # Title of the section
       #
       # @return [String]
@@ -35,8 +33,11 @@ module Aef
 
       # Elements inside the section
       #
-      # @return [Aef::Host::Element]
-      attr_accessor :elements
+      # @note If the Array is modified in place, you need to manually
+      #   invalidate the cache with option :only_section => true.
+      # @see #invalidate_cache!
+      # @return [Array<Aef::Host::Element>]
+      attr_reader :elements
 
       # Initializes a section
       #
@@ -75,13 +76,21 @@ module Aef
       #
       # @return [true, false] true if cache is not empty
       def cache_filled?
-        @cache[:header] and @cache[:footer]
+        !!@cache[:header] && !!@cache[:footer]
       end
 
       # Sets the title of the section
       def name=(name)
-        name_will_change! unless name.equal?(@name)
-        @name = name
+        set_if_changed(:name, name.to_s) do
+          invalidate_cache!(:only_section => true)
+        end
+      end
+
+      # Sets the elements inside the section
+      def elements=(elements)
+        set_if_changed(:elements, [*elements]) do
+          invalidate_cache!(:only_section => true)
+        end
       end
 
       # A String representation for debugging purposes

@@ -19,7 +19,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 require 'set'
 require 'pathname'
-require 'active_model'
 require 'aef/linebreak'
 
 # Namespace for projects of Alexander E. Fischer <aef@raxys.net>.

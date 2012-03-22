@@ -22,25 +22,25 @@ describe Aef::Hosts::Helpers do
     it "should accept options with a subset of valid option keys" do
       options = {:valid1 => 123, :valid2 => 456} 
 
-      lambda {
+      expect {
         validate_options(options, :valid1, :valid2, :valid3)
-      }.should_not raise_error
+      }.not_to raise_error
     end
 
     it "should accept options with exactly the valid option keys" do
       options = {:valid1 => 123, :valid2 => 456, :valid3 => 789} 
 
-      lambda {
+      expect {
         validate_options(options, :valid1, :valid2, :valid3)
-      }.should_not raise_error
+      }.not_to raise_error
     end
 
     it "should deny options with invalid option keys" do
       options = {:valid1 => 123, :invalid => 'test'} 
   
-      lambda {
+      expect {
         validate_options(options, :valid1, :valid2, :valid3)
-      }.should raise_error(ArgumentError, "Invalid option keys: :invalid")
+      }.to raise_error(ArgumentError, 'Invalid option keys: :invalid')
     end
   end
 
