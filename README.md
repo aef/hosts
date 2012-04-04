@@ -45,6 +45,9 @@ This documentation defines the public interface of the software. Don't rely
 on elements marked as private. Those should be hidden in the documentation
 by default.
 
+This is still experimental software, even the public interface may change
+substantially in future releases.
+
 ### Loading
 
 In most cases you want to load the library by the following command:
@@ -57,6 +60,178 @@ In a bundler Gemfile you should use the following:
 
 ~~~~~ ruby
 gem 'hosts'
+~~~~~
+
+### Reading a hosts file
+
+You can either read a hosts file from the file system:
+
+~~~~~ ruby
+hosts = Hosts::File.read('/etc/hosts')
+~~~~~
+
+Or you can parse a String containing the content of a hosts file:
+
+~~~~~ ruby
+hosts = Hosts::File.parse(hosts_content)
+~~~~~
+
+### Elements
+
+Afterwards the hosts file's elements are accessible through the elements attribute:
+
+~~~~~ ruby
+hosts.elements
+# => [ #<Aef::Hosts::Entry: address="127.0.0.1" name="localhost" aliases=[] comment=nil cached!>,
+#      #<Aef::Hosts::EmptyElement: cached!>,
+#      #<Aef::Hosts::Entry: address="192.168.1.1" name="myhost" aliases=["myhost.mydomain"] comment=" Some comment" cached!>
+# ]
+~~~~~
+
+Elements can simply be appended to the existing elements array:
+
+~~~~~ ruby
+hosts.elements << new_element
+hosts.elements += new_elements
+~~~~~
+
+Or you can insert elements at specific positions:
+
+~~~~~ ruby
+hosts.elements.insert(0, new_element)
+~~~~~
+
+There are four different types of elements for a hosts file:
+
+#### Entry
+
+The Entry is the most common element of a hosts file. A single entry has
+an address, a name and optionally an unlimited amount of alias names and a
+comment.
+
+~~~~~ ruby
+Hosts::Entry.new('10.23.5.1', 'otherhost',
+                 :aliases => ['otherhost.mydomain'],
+                 :comment => ' A new host')
+~~~~~
+
+#### Comment
+
+A Comment represents a line containing only a comment.
+
+~~~~~ ruby
+Hosts::Comment.new(' Nothing special')
+~~~~~
+
+#### Section
+
+A section has a name and optionally an unlimited amount of inner elements. In
+String representation a section is enclosed by easily distinguishable header
+and footer
+
+    # ----- BEGIN SECTION somename -----
+    # Elements here
+    # ----- END SECTION somename -----
+
+A section is created by the following:
+
+~~~~~ ruby
+elements
+# => [#<Aef::Hosts::Comment comment=" Elements here">]
+
+section = Hosts::Section.new('somename', :elements => elements)
+~~~~~
+
+On an existing Section, elements can be modified in the same way as on a File:
+
+~~~~~ ruby
+section.elements
+# => [#<Aef::Hosts::Comment comment=" Elements here">]
+~~~~~
+
+#### Empty element
+
+Also, to represent completly empty lines without abandoning their whitespace
+contents there is an EmptyElement.
+
+~~~~~ ruby
+Hosts::EmptyElement.new
+~~~~~
+
+#### Cache
+
+When creating an element you can also specify it's String cache. This is done
+automatically when reading in an existing hosts file. Should you for any reason
+want to do this manually, do it like the following:
+
+~~~~~ ruby
+Hosts::EmptyElement.new(:cache => "   \t  ")
+~~~~~
+
+Note that the semantics for cache of a Section differ. See the class
+documentation for this.
+
+### Generating a String representation
+
+To render the hosts file back into a String simply call the #to_s method:
+
+~~~~~ ruby
+hosts.to_s
+# => "   127.0.0.1\tlocalhost\n   \n   192.168.1.1\tmyhost\tmyhost.mydomain\t# Some comment\n"
+~~~~~
+
+If you have read the hosts file from a file system path you can simply save it
+back to this path:
+
+~~~~~ ruby
+hosts.write
+~~~~~
+
+Otherwise, if there is no known path for the file already you can specify one
+for each write operation:
+
+~~~~~ ruby
+hosts.write(:path => '/tmp/hosts')
+~~~~~
+
+Or set the path for all future write operations by setting the path attribute:
+
+~~~~~ ruby
+hosts.path = '/tmp/hosts'
+
+hosts.write
+~~~~~
+
+### String cache
+
+Normally, if a cached String representation of an element is available, it will
+be used instead of rendering a new one to preserve the overall layout of the
+hosts file. If you which to generate the whole file from scratch, simply supply
+the :force_generation option:
+
+~~~~~ ruby
+hosts.to_s(:force_generation => true)
+# => "127.0.0.1 localhost\n\n192.168.1.1 myhost myhost.mydomain # Some comment\n"
+~~~~~
+
+Instead of temporarily ignoring the cached String representation you could also
+invalidate the cache completely:
+
+~~~~~ ruby
+hosts.invalidate_cache!
+~~~~~
+
+This can also be done on single elements of the hosts file:
+
+~~~~~ ruby
+hosts.elements[1].invalidate_cache!
+~~~~~
+
+If you change attributes of an element, the cache will be cleaned
+automatically:
+
+~~~~~ ruby
+hosts.elements[0].address = '127.0.1.1'
 ~~~~~
 
 Requirements
