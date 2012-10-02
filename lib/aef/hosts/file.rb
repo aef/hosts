@@ -58,7 +58,7 @@ module Aef
       class << self
         # Parses a hosts file given as path.
         #
-        # @param [Pathname] the hosts file path
+        # @param [Pathname] path the hosts file path
         # @return [Aef::Hosts::File] a file
         def read(path)
           new(path).read
