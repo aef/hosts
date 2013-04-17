@@ -152,7 +152,7 @@ section.elements
 
 #### Empty element
 
-Also, to represent completly empty lines without abandoning their whitespace
+Also, to represent completely empty lines without abandoning their whitespace
 contents there is an EmptyElement.
 
 ~~~~~ ruby
