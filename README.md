@@ -130,9 +130,9 @@ A section has a name and optionally an unlimited amount of inner elements. In
 String representation a section is enclosed by easily distinguishable header
 and footer
 
-    # ----- BEGIN SECTION somename -----
+    # -----BEGIN SECTION somename-----
     # Elements here
-    # ----- END SECTION somename -----
+    # -----END SECTION somename-----
 
 A section is created by the following:
 
